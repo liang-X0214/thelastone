@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宋厨娘烹饪</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+        @font-face { font-family: 'MyFont'; src: url('img/yezigongchangxiaoshitou.ttf') format('truetype'); }
+        body {
+            font-family: MyFont;
+            background-image:url("img/chufang.png");
+			background-size: cover;
+            min-height: 100vh;
+            padding: 10px;
+            color: white;
+            text-align: center;
+        }
+        
+        .error {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 99, 99, 0.9);
+            color: yellow;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            margin: 10px 0;
+            font-size: 24px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(85, 85, 85, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            color: #ffe979;
+            margin-top: 5px;
+        }
+        
+        .targets {
+            background: rgba(85, 85, 85, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .target-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .target-emoji {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        
+        .game-area {
+            width: 100%;
+            height: 60vh;
+            background: rgba(85, 85, 85, 0.2);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .pot {
+            width: 100px;
+            height: 50px;
+            background: #8B4513;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0 0 50px 50px;
+        }
+        
+        .ingredient {
+            position: absolute;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .countdown {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #ffe979;
+            z-index: 100;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            border-radius: 20px;
+            padding: 25px;
+            width: 80%;
+			height:70%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+			overflow-y: scroll; 
+        }
+        
+        .modal h2 {
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .modal p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .modal button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .instruction {
+            margin: 10px 0;
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .fail-modal {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        #continueBtn {
+            background: #36D1DC;
+        }
+        
+        #restartBtn {
+            background: #4CAF50;
+        }
+        
+        #gameOverBtn {
+            background: #FF5722;
+        }
+        
+        #mainMenuBtn {
+            background: #2196F3;
+        }
+        
+        #failMainMenuBtn {
+            background: #9C27B0;
+        }
+        
+        /* 开始弹窗样式 */
+        #startModal .modal-content {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            max-width: 500px;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #startModal h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        #startModal p {
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        #startModal ul li {
+            color: white;
+            margin-bottom: 5px;
+        }
+        
+        #startGameBtn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error hidden" id="error">菜里没有这个！</div>
+    
+    <!-- 开始弹窗 -->
+    <div class="modal" id="startModal">
+        <div class="modal-content">
+            <h2>👩‍🍳 宋代厨娘简介</h2>
+            <div style="text-align: left; line-height: 1.6; margin: 20px 0;">
+                <p>宋代厨娘是中国历史上最早出现的专业女性厨师群体。她们技艺精湛、地位尊贵，不仅服务于宫廷贵族，也活跃于市井酒楼。</p>
+                <p>特点：</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>受过专业训练，烹饪技术高超</li>
+                    <li>讲究食材搭配和刀工技艺</li>
+                    <li>开创了许多经典菜式</li>
+                    <li>是宋代饮食文化的重要代表</li>
+                </ul>
+                <p>本游戏中，你将扮演一位宋代厨娘，挑战制作三道宋代名菜！</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left;">
+                <p><strong>🎮 游戏操作：</strong></p>
+                <p>1. 滑动手指控制锅的左右移动</p>
+                <p>2. 接住上方掉落的目标食材</p>
+                <p>3. 避免接到非目标食材（会重置进度）</p>
+                <p>4. 在规定时间内收集足够食材完成菜品</p>
+                <p>5. 每完成一道菜学习宋代美食知识</p>
+            </div>
+            <div style="color: #FFD700; font-weight: bold; margin: 15px 0;">
+                <p>📝 注意：每关60秒，共3关，加油！</p>
+            </div>
+            <button id="startGameBtn">开始烹饪之旅</button>
+        </div>
+    </div>
+    
+    <h1 class="header">🍳 宋厨娘烹饪</h1>
+    
+    <div class="stats">
+        <div>
+            <div>关卡</div>
+            <div class="stat-value" id="level">1/3</div>
+        </div>
+        <div>
+            <div>分数</div>
+            <div class="stat-value" id="score">0</div>
+        </div>
+        <div>
+            <div>时间</div>
+            <div class="stat-value" id="time">60</div>
+        </div>
+    </div>
+    
+    <div class="targets">
+        <div>目标食材</div>
+        <div class="target-list" id="targets"></div>
+    </div>
+    
+    <div class="instruction">在游戏区域滑动手指移动锅</div>
+    
+    <div class="game-area" id="gameArea">
+        <div class="countdown hidden" id="countdown">3</div>
+        <div class="pot" id="pot"></div>
+    </div>
+    
+    <div class="modal hidden" id="knowledgeModal">
+        <div class="modal-content">
+            <h2>美食知识</h2>
+            <p id="knowledgeText"></p>
+            <button id="continueBtn">继续游戏</button>
+        </div>
+    </div>
+    
+    <div class="modal hidden" id="endMenu">
+        <div class="modal-content">
+            <h2>🎉 游戏完成</h2>
+            <p>最终分数: <span id="finalScore">0</span></p>
+            <div class="button-group">
+                <button id="restartBtn">重新游戏</button>
+                <button id="mainMenuBtn">返回主界面</button>
+                <button onclick="startTest()">开始测验</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增的游戏失败弹窗 -->
+    <div class="modal hidden" id="failModal">
+        <div class="modal-content fail-modal">
+            <h2>⏰ 时间到！</h2>
+            <p>游戏结束</p>
+            <p style="font-size: 24px; color: #FFD700; margin: 15px 0;">得分: <span id="failScore">0</span></p>
+            <div class="button-group">
+                <button id="gameOverBtn">重新开始</button>
+                <button id="failMainMenuBtn">返回主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示开始弹窗
+        document.addEventListener('DOMContentLoaded', function() {
+            const startModal = document.getElementById('startModal');
+            const startGameBtn = document.getElementById('startGameBtn');
+            
+            // 开始游戏按钮事件
+            startGameBtn.addEventListener('click', function() {
+                startModal.classList.add('hidden');
+                init();
+            });
+        });
+        
+        // 食材数据
+        const ingredients = [
+            { id: 1, emoji: "🐟", bgColor: "#E1F5FE" },
+            { id: 2, emoji: "🍄", bgColor: "#EFEBE9" },
+            { id: 3, emoji: "🧈", bgColor: "#FFFDE7" },
+            { id: 4, emoji: "🍗", bgColor: "#FFF3E0" },
+            { id: 5, emoji: "🥕", bgColor: "#FBE9E7" },
+            { id: 6, emoji: "🥚", bgColor: "#FFFDE7" },
+            { id: 7, emoji: "🌰", bgColor: "#EFEBE9" },
+            { id: 8, emoji: "🎍", bgColor: "#F1F8E9" },
+            { id: 9, emoji: "🌾", bgColor: "#FFFDE7" }
+        ];
+        
+        // 关卡配置
+        const levels = [
+            { targets: [1, 2, 3], required: 3, knowledge: "宋嫂鱼羹：相传由南宋厨娘宋嫂创制。主要原料有新鲜鲫鱼、生姜、葱、料酒、盐、浓稠的鱼骨汤，还会加入豆腐、蘑菇等配菜。" },
+            { targets: [4, 5, 6], required: 3, knowledge: "水晶脍：是一种晶莹透亮的肉冻。主料有猪肉皮、鸡肉、猪肘，辅料包括火腿、香菜、鸡蛋黄糕、胡萝卜等，调料有黄酒、盐、味精、葱汁、姜汁等。" },
+            { targets: [7, 8, 9], required: 3, knowledge: "胜肉：素馅儿点心，用蘑菇、鲜笋、核桃仁、松仁、面皮等为原料，煎烙而成。" }
+        ];
+        
+        // 游戏状态
+        let game = {
+            level: 0,
+            score: 0,
+            time: 60,
+            playing: false,
+            collected: {},
+            ingredients: [],
+            potX: 50
+        };
+        
+        // DOM元素
+        const el = {
+            error: document.getElementById('error'),
+            level: document.getElementById('level'),
+            score: document.getElementById('score'),
+            time: document.getElementById('time'),
+            targets: document.getElementById('targets'),
+            gameArea: document.getElementById('gameArea'),
+            pot: document.getElementById('pot'),
+            countdown: document.getElementById('countdown'),
+            knowledgeModal: document.getElementById('knowledgeModal'),
+            knowledgeText: document.getElementById('knowledgeText'),
+            continueBtn: document.getElementById('continueBtn'),
+            endMenu: document.getElementById('endMenu'),
+            finalScore: document.getElementById('finalScore'),
+            restartBtn: document.getElementById('restartBtn'),
+            mainMenuBtn: document.getElementById('mainMenuBtn'),
+            failModal: document.getElementById('failModal'),
+            failScore: document.getElementById('failScore'),
+            gameOverBtn: document.getElementById('gameOverBtn'),
+            failMainMenuBtn: document.getElementById('failMainMenuBtn'),
+            startModal: document.getElementById('startModal')
+        };
+        
+        // === 新增：返回主页面的函数 ===
+        function goBackToMain() {
+            // 检查是否在 iframe 中运行
+            if (window.parent && window.parent.closeGame) {
+                // 调用父页面的关闭函数
+                window.parent.closeGame();
+            } else {
+                // 如果没有父页面函数，回退到原来的跳转方式
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // 显示错误信息
+        function showError() {
+            el.error.style.display = 'block';
+            setTimeout(() => {
+                el.error.style.display = 'none';
+            }, 1000);
+        }
+        
+        // 返回主界面
+        function returnToMainMenu() {
+            // === 修改：使用新的返回函数 ===
+            goBackToMain();
+        }
+        
+        // 初始化游戏
+        function init() {
+            // 确保开始弹窗是隐藏的
+            if (el.startModal && !el.startModal.classList.contains('hidden')) {
+                el.startModal.classList.add('hidden');
+            }
+            
+            game.level = 0;
+            game.score = 0;
+            game.playing = false;
+            game.ingredients.forEach(ing => ing.element.remove());
+            game.ingredients = [];
+            el.failModal.classList.add('hidden');
+            el.endMenu.classList.add('hidden');
+            nextLevel();
+        }
+        
+        // 下一关
+        function nextLevel() {
+            game.level++;
+            if (game.level > levels.length) {
+                endGame();
+                return;
+            }
+            
+            el.knowledgeModal.classList.add('hidden');
+            const level = levels[game.level - 1];
+            game.time = 60;
+            game.collected = {};
+            
+            level.targets.forEach(id => game.collected[id] = 0);
+            
+            el.level.textContent = `${game.level}/3`;
+            el.score.textContent = game.score;
+            el.time.textContent = game.time;
+            
+            showTargets();
+            startCountdown();
+        }
+        
+        // 显示目标食材
+        function showTargets() {
+            const level = levels[game.level - 1];
+            el.targets.innerHTML = '';
+            
+            level.targets.forEach(id => {
+                const ing = ingredients.find(i => i.id === id);
+                const item = document.createElement('div');
+                item.innerHTML = `
+                    <div class="target-emoji" style="background:${ing.bgColor}">
+                        ${ing.emoji}
+                    </div>
+                    <div style="font-size:12px;color:#FFD700">0/${level.required}</div>
+                `;
+                item.dataset.id = id;
+                el.targets.appendChild(item);
+            });
+        }
+        
+        // 开始倒计时
+        function startCountdown() {
+            el.countdown.classList.remove('hidden');
+            let count = 3;
+            el.countdown.textContent = count;
+            
+            const timer = setInterval(() => {
+                count--;
+                el.countdown.textContent = count;
+                if (count <= 0) {
+                    clearInterval(timer);
+                    el.countdown.classList.add('hidden');
+                    startGame();
+                }
+            }, 1000);
+        }
+        
+        // 开始游戏
+        function startGame() {
+            game.playing = true;
+            
+            // 计时器
+            const timeTimer = setInterval(() => {
+                if (!game.playing) {
+                    clearInterval(timeTimer);
+                    return;
+                }
+                game.time--;
+                el.time.textContent = game.time;
+                if (game.time <= 0) {
+                    clearInterval(timeTimer);
+                    gameOver();
+                }
+            }, 1000);
+            
+            // 生成食材
+            const ingredientTimer = setInterval(() => {
+                if (!game.playing) {
+                    clearInterval(ingredientTimer);
+                    return;
+                }
+                const ing = ingredients[Math.floor(Math.random() * ingredients.length)];
+                const element = document.createElement('div');
+                element.className = 'ingredient';
+                element.textContent = ing.emoji;
+                element.style.background = ing.bgColor;
+                element.style.left = `${Math.random() * 90 + 5}%`;
+                element.style.top = '-50px';
+                
+                el.gameArea.appendChild(element);
+                
+                game.ingredients.push({
+                    element,
+                    id: ing.id,
+                    y: -50,
+                    speed: 1 + Math.random() * 1
+                });
+            }, 800);
+            
+            // 游戏循环
+            function gameLoop() {
+                if (!game.playing) return;
+                
+                el.pot.style.left = `${game.potX}%`;
+                
+                game.ingredients.forEach((ing, i) => {
+                    ing.y += ing.speed;
+                    ing.element.style.top = `${ing.y}px`;
+                    
+                    // 碰撞检测
+                    const potRect = el.pot.getBoundingClientRect();
+                    const ingRect = ing.element.getBoundingClientRect();
+                    const isCollision = !(ingRect.bottom < potRect.top ||
+                                        ingRect.top > potRect.bottom ||
+                                        ingRect.right < potRect.left ||
+                                        ingRect.left > potRect.right);
+                    
+                    if (isCollision) {
+                        catchIngredient(ing, i);
+                    } else if (ing.y > el.gameArea.clientHeight) {
+                        ing.element.remove();
+                        game.ingredients.splice(i, 1);
+                    }
+                });
+                
+                requestAnimationFrame(gameLoop);
+            }
+            
+            gameLoop();
+        }
+        
+        // 接住食材
+        function catchIngredient(ing, index) {
+            ing.element.remove();
+            game.ingredients.splice(index, 1);
+            
+            const isTarget = levels[game.level - 1].targets.includes(ing.id);
+            
+            if (isTarget) {
+                // 正确食材
+                game.collected[ing.id]++;
+                game.score += 10;
+                el.score.textContent = game.score;
+                
+                // 更新目标计数
+                const targetItem = document.querySelector(`[data-id="${ing.id}"] div:last-child`);
+                targetItem.textContent = `${game.collected[ing.id]}/${levels[game.level - 1].required}`;
+                targetItem.style.color = '#4CAF50';
+                
+                // 检查关卡完成
+                const allCollected = levels[game.level - 1].targets.every(id => 
+                    game.collected[id] >= levels[game.level - 1].required
+                );
+                if (allCollected) {
+                    setTimeout(() => {
+                        levelComplete();
+                    }, 300);
+                }
+            } else {
+                // 错误食材 - 显示错误提示并重置进度
+                showError();
+                levels[game.level - 1].targets.forEach(id => {
+                    game.collected[id] = 0;
+                    const item = document.querySelector(`[data-id="${id}"] div:last-child`);
+                    item.textContent = `0/${levels[game.level - 1].required}`;
+                    item.style.color = '#FFD700';
+                });
+            }
+        }
+        
+        // 关卡完成
+        function levelComplete() {
+            game.playing = false;
+            game.ingredients.forEach(ing => ing.element.remove());
+            game.ingredients = [];
+            
+            el.knowledgeText.textContent = levels[game.level - 1].knowledge;
+            el.knowledgeModal.classList.remove('hidden');
+        }
+        
+        // 游戏失败（时间到）
+        function gameOver() {
+            game.playing = false;
+            game.ingredients.forEach(ing => ing.element.remove());
+            game.ingredients = [];
+            
+            el.failScore.textContent = game.score;
+            setTimeout(() => {
+                el.failModal.classList.remove('hidden');
+            }, 500);
+        }
+        
+        // 游戏结束（完成所有关卡）
+        function endGame() {
+            game.playing = false;
+            game.ingredients.forEach(ing => ing.element.remove());
+            game.ingredients = [];
+            
+            el.finalScore.textContent = game.score;
+            setTimeout(() => {
+                el.endMenu.classList.remove('hidden');
+            }, 500);
+        }
+        
+        // 重新游戏
+        function restartGame() {
+            el.endMenu.classList.add('hidden');
+            init();
+        }
+        
+        // 开始测验
+        function startTest() {
+            
+            // 跳转到答题游戏
+            if (window.parent && window.parent.startQuizGame) {
+                window.parent.startQuizGame();
+            } else {
+                // 假设答题游戏主文件为 quiz-main.html，答题1界面为 quiz-question1.html
+                window.location.href = 'question2.html?from=puzzle';
+            }
+        }
+        
+        // 事件监听
+        el.continueBtn.addEventListener('click', () => {
+            nextLevel();
+        });
+        
+        el.restartBtn.addEventListener('click', restartGame);
+        
+        // === 修改：返回主界面按钮（完成界面）===
+        el.mainMenuBtn.addEventListener('click', function() {
+            // 使用新的返回函数
+            goBackToMain();
+        });
+        
+        el.gameOverBtn.addEventListener('click', () => {
+            el.failModal.classList.add('hidden');
+            init();
+        });
+        
+        // === 修改：返回主界面按钮（失败界面）===
+        el.failMainMenuBtn.addEventListener('click', function() {
+            // 使用新的返回函数
+            goBackToMain();
+        });
+        
+        // 滑动控制锅的移动
+        el.gameArea.addEventListener('touchstart', (e) => {
+            if (!game.playing) return;
+            const rect = el.gameArea.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            game.potX = Math.max(5, Math.min(95, (x / rect.width) * 100));
+        });
+        
+        el.gameArea.addEventListener('touchmove', (e) => {
+            if (!game.playing) return;
+            const rect = el.gameArea.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            game.potX = Math.max(5, Math.min(95, (x / rect.width) * 100));
+            e.preventDefault();
+        });
+        
+        // 防止页面滚动
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.game-area')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

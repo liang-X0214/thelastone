@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>古诗知识测验</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #eadf66, #7ea298);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 30px);
+        }
+
+        .page {
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .active-page {
+            display: flex;
+        }
+
+        .home-page {
+            text-align: center;
+        }
+
+        .home-page h1 {
+            color: #667eea;
+            margin: 50px 0 40px;
+            font-size: 2rem;
+        }
+
+        .home-page h2 {
+            color: #667eea;
+            margin: 20px 0 40px;
+            font-size: 1.5rem;
+        }
+        
+        .home-page h3 {
+            color: #667eea;
+            margin: 20px 0 40px;
+            font-size: 1rem;
+        }
+        
+        .game-btn {
+            background: linear-gradient(135deg, #eadf66, #7ea298);
+            color: white;
+            border: none;
+            margin-top:30px;
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .game-btn:hover, .game-btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-counter {
+            font-size: 1rem;
+            color: #666;
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .question-title {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            flex-grow: 1;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            background: #e9ecef;
+        }
+
+        .option-btn.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1565c0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .prev-btn {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .next-btn, .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .prev-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .next-btn:hover, .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .result-content {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-display {
+            font-size: 4.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0 35px;
+        }
+
+        .star {
+            font-size: 2.5rem;
+            color: #ddd;
+        }
+
+        .star.filled {
+            color: #ffc107;
+        }
+
+        .result-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .action-btn {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+
+        .back-home-btn {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .review-btn {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+        }
+
+        .check-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-to-result-btn {
+            background: #f8f9fa;
+            color: #495057;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border: 2px solid #e9ecef;
+        }
+
+        .answer-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .confirm-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                min-height: calc(100vh - 15px);
+                border-radius: 15px;
+            }
+            
+            .page {
+                padding: 15px;
+            }
+            
+            .question-title {
+                font-size: 1.2rem;
+            }
+            
+            .score-display {
+                font-size: 3.5rem;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                width: 90%;
+            }
+        }
+
+        .correct-option {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+
+        .wrong-option {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="page home-page active-page" id="home-page">
+            <h1>古诗知识测验</h1>
+            <h2>🎉恭喜通过我们的拼图游戏！🥳</h2>
+            <h2>下面让我们通过一个小测验加强我们对这些优秀女性作品的印象吧！</h2>
+            <h3>下面的测验包含5道题目，满分为100分</h3>
+            <h3>选择你认为正确的答案，完成后就可以看到详细的结果分析</h3>
+            <button class="game-btn" data-game="game4">开始答题</button>
+        </div>
+
+        <div class="page quiz-page" id="quiz-page">
+            <div class="quiz-header">
+                <div class="question-counter" id="question-counter">题目 1/5</div>
+            </div>
+            
+            <div class="question-title" id="question-title">这里是题目内容...</div>
+            
+            <div class="options-container" id="options-container"></div>
+            
+            <div class="navigation">
+                <button class="nav-btn prev-btn" id="prev-btn" disabled>上一题</button>
+                <button class="nav-btn next-btn" id="next-btn">下一题</button>
+                <button class="nav-btn submit-btn" id="submit-btn" style="display: none;">提交</button>
+            </div>
+        </div>
+
+        <div class="page result-page" id="result-page">
+            <div class="result-content">
+                <h2>答题完成!</h2>
+                <div class="score-display" id="score-display">0分</div>
+                <div class="stars" id="stars"></div>
+                <p id="result-message">继续努力，加油学习！</p>
+            </div>
+            
+            <div class="result-actions">
+                <button class="action-btn play-again-btn" id="play-again-btn">再玩一遍</button>
+                <button class="action-btn back-home-btn" id="back-home-btn">返回首页</button>
+                <button class="action-btn review-btn" id="review-btn">检查错题</button>
+            </div>
+        </div>
+
+        <div class="page check-page" id="check-page">
+            <div class="check-header">
+                <button class="back-to-result-btn" id="back-to-result-btn">返回结果</button>
+                <div class="question-counter" id="check-question-counter">错题 1/2</div>
+            </div>
+            
+            <div class="question-title" id="check-question-title">这里是题目内容...</div>
+            
+            <div class="options-container" id="check-options-container"></div>
+            
+            <div class="answer-info" id="answer-info">
+                <strong>答案：</strong><span id="correct-answer-text">选项内容</span>
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn prev-btn" id="check-prev-btn" disabled>上一题</button>
+                <button class="nav-btn next-btn" id="check-next-btn">下一题</button>
+            </div>
+        </div>
+
+        <div class="modal" id="submit-modal">
+            <div class="modal-content">
+                <h3>确认提交</h3>
+                <p>您确定要提交答案吗？提交后将无法修改。</p>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel-btn" id="cancel-submit">取消</button>
+                    <button class="modal-btn confirm-btn" id="confirm-submit">确认提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            game4: [
+                {
+                    question: "宋代厨娘在中国饮食史上的地位是？",
+                    options: [" 普通家庭主妇", "最早的专业女性厨师群体", " 仅限于宫廷服务的女仆", " 街头小贩"],
+                    answer: 1
+                },
+                {
+                    question: "游戏中的“宋嫂鱼羹”传说是由谁创制的？",
+                    options: ["唐代名厨", " 南宋厨娘宋嫂", "北宋宫廷御厨", "民间无名厨师"],
+                    answer: 1
+                },
+                {
+                    question: "游戏第三关的“胜肉”是一种什么食物？",
+                    options: [" 油炸肉类", "素馅儿点心", "  炖煮肉汤", "  烤肉串"],
+                    answer: 1
+                },
+                {
+                    question: "宋代厨娘的特点不包括以下哪项？",
+                    options: [" 受过专业训练，烹饪技术高超", " 讲究食材搭配和刀工技艺", "开创了许多经典菜式", "主要在民间摆摊经营"],
+                    answer: 3
+                },
+                {
+                    question: "游戏中的“水晶脍”是什么类型的菜肴？",
+                    options: ["油炸点心", " 蒸煮菜肴", "晶莹透亮的肉冻", "烧烤肉类"],
+                    answer: 2
+                }
+            ]
+        };
+
+        const state = {
+            currentGame: null,
+            currentQuestions: [],
+            currentPage: 'home',
+            currentQuestionIndex: 0,
+            userAnswers: [],
+            score: 0,
+            wrongQuestions: [],
+            checkIndex: 0,
+            hasReturned: false
+        };
+
+        const pages = {
+            home: document.getElementById('home-page'),
+            quiz: document.getElementById('quiz-page'),
+            result: document.getElementById('result-page'),
+            check: document.getElementById('check-page')
+        };
+
+        const quizElements = {
+            questionCounter: document.getElementById('question-counter'),
+            questionTitle: document.getElementById('question-title'),
+            optionsContainer: document.getElementById('options-container'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            submitBtn: document.getElementById('submit-btn')
+        };
+
+        const resultElements = {
+            scoreDisplay: document.getElementById('score-display'),
+            stars: document.getElementById('stars'),
+            resultMessage: document.getElementById('result-message')
+        };
+
+        const checkElements = {
+            questionCounter: document.getElementById('check-question-counter'),
+            questionTitle: document.getElementById('check-question-title'),
+            optionsContainer: document.getElementById('check-options-container'),
+            correctAnswerText: document.getElementById('correct-answer-text'),
+            prevBtn: document.getElementById('check-prev-btn'),
+            nextBtn: document.getElementById('check-next-btn')
+        };
+
+        const modal = document.getElementById('submit-modal');
+        const cancelSubmitBtn = document.getElementById('cancel-submit');
+        const confirmSubmitBtn = document.getElementById('confirm-submit');
+
+        function sendMessageToParent(type, data = {}) {
+            try {
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: type,
+                        ...data,
+                        timestamp: Date.now()
+                    }, '*');
+                }
+            } catch (error) {
+                console.error('发送消息时出错:', error);
+            }
+        }
+
+        function showPage(pageName) {
+            Object.values(pages).forEach(page => {
+                page.classList.remove('active-page');
+            });
+            pages[pageName].classList.add('active-page');
+            state.currentPage = pageName;
+        }
+
+        function startGame(gameName) {
+            state.currentGame = gameName;
+            state.currentQuestions = gameData[gameName];
+            state.currentQuestionIndex = 0;
+            state.userAnswers = new Array(state.currentQuestions.length).fill(null);
+            state.score = 0;
+            state.wrongQuestions = [];
+            state.hasReturned = false;
+            
+            showPage('quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = state.currentQuestions[state.currentQuestionIndex];
+            const totalQuestions = state.currentQuestions.length;
+            
+            quizElements.questionCounter.textContent = `题目 ${state.currentQuestionIndex + 1}/${totalQuestions}`;
+            quizElements.questionTitle.textContent = question.question;
+            quizElements.optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                if (state.userAnswers[state.currentQuestionIndex] === index) {
+                    button.classList.add('selected');
+                }
+                button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                button.dataset.index = index;
+                
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.option-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    button.classList.add('selected');
+                    state.userAnswers[state.currentQuestionIndex] = index;
+                    updateNavigationButtons();
+                });
+                
+                quizElements.optionsContainer.appendChild(button);
+            });
+            
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            const totalQuestions = state.currentQuestions.length;
+            quizElements.prevBtn.disabled = state.currentQuestionIndex === 0;
+            
+            if (state.currentQuestionIndex === totalQuestions - 1) {
+                quizElements.nextBtn.style.display = 'none';
+                quizElements.submitBtn.style.display = 'block';
+                quizElements.submitBtn.disabled = state.userAnswers[state.currentQuestionIndex] === null;
+            } else {
+                quizElements.nextBtn.style.display = 'block';
+                quizElements.submitBtn.style.display = 'none';
+                quizElements.nextBtn.disabled = state.userAnswers[state.currentQuestionIndex] === null;
+            }
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestionIndex < state.currentQuestions.length - 1) {
+                state.currentQuestionIndex++;
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestionIndex > 0) {
+                state.currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function calculateScore() {
+            state.score = 0;
+            state.wrongQuestions = [];
+            
+            state.currentQuestions.forEach((question, index) => {
+                if (state.userAnswers[index] === question.answer) {
+                    state.score += 20;
+                } else {
+                    state.wrongQuestions.push({
+                        index,
+                        question: question.question,
+                        options: question.options,
+                        correctAnswer: question.answer,
+                        userAnswer: state.userAnswers[index]
+                    });
+                }
+            });
+            
+            return {
+                score: state.score,
+                total: state.currentQuestions.length * 20,
+                percentage: state.score / (state.currentQuestions.length * 20),
+                wrongQuestions: state.wrongQuestions
+            };
+        }
+
+        function showResult() {
+            const result = calculateScore();
+            const starsCount = Math.ceil(result.score / 20);
+            
+            resultElements.scoreDisplay.textContent = `${result.score}分`;
+            resultElements.stars.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('span');
+                star.className = `star ${i < starsCount ? 'filled' : ''}`;
+                star.textContent = '★';
+                resultElements.stars.appendChild(star);
+            }
+            
+            let message = '';
+            if (result.score >= 90) {
+                message = '太棒了！你是学习标兵！';
+            } else if (result.score >= 70) {
+                message = '很不错！继续加油！';
+            } else if (result.score >= 60) {
+                message = '合格了，还有进步空间！';
+            } else {
+                message = '继续努力，加油学习！';
+            }
+            
+            resultElements.resultMessage.textContent = message;
+            showPage('result');
+            
+            sendMessageToParent('gameCompleted', {
+                score: result.score,
+                stars: starsCount,
+                waitingForUser: true
+            });
+        }
+
+        function showCheckPage() {
+            if (state.wrongQuestions.length === 0) {
+                alert('恭喜！您没有错题！');
+                return;
+            }
+            
+            state.checkIndex = 0;
+            showPage('check');
+            loadCheckQuestion();
+        }
+
+        function loadCheckQuestion() {
+            const wrongQuestion = state.wrongQuestions[state.checkIndex];
+            const originalIndex = wrongQuestion.index;
+            const question = state.currentQuestions[originalIndex];
+            
+            checkElements.questionCounter.textContent = `错题 ${state.checkIndex + 1}/${state.wrongQuestions.length}`;
+            checkElements.questionTitle.textContent = question.question;
+            checkElements.optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                if (index === question.answer) button.classList.add('correct-option');
+                if (index === wrongQuestion.userAnswer) button.classList.add('wrong-option');
+                button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                button.disabled = true;
+                checkElements.optionsContainer.appendChild(button);
+            });
+            
+            const correctAnswerLetter = String.fromCharCode(65 + question.answer);
+            checkElements.correctAnswerText.textContent = `${correctAnswerLetter}. ${question.options[question.answer]}`;
+            
+            checkElements.prevBtn.disabled = state.checkIndex === 0;
+            checkElements.nextBtn.disabled = state.checkIndex === state.wrongQuestions.length - 1;
+        }
+
+        function nextCheckQuestion() {
+            if (state.checkIndex < state.wrongQuestions.length - 1) {
+                state.checkIndex++;
+                loadCheckQuestion();
+            }
+        }
+
+        function prevCheckQuestion() {
+            if (state.checkIndex > 0) {
+                state.checkIndex--;
+                loadCheckQuestion();
+            }
+        }
+
+        function restartGame() {
+            state.currentQuestionIndex = 0;
+            state.userAnswers = new Array(state.currentQuestions.length).fill(null);
+            state.score = 0;
+            state.wrongQuestions = [];
+            state.hasReturned = false;
+            
+            showPage('quiz');
+            loadQuestion();
+        }
+
+        function returnToHome() {
+            if (state.hasReturned) return;
+            state.hasReturned = true;
+            
+            const backHomeBtn = document.getElementById('back-home-btn');
+            backHomeBtn.disabled = true;
+            backHomeBtn.textContent = '返回中...';
+            
+            const result = calculateScore();
+            const starsCount = Math.ceil(result.score / 20);
+            
+            sendMessageToParent('returnToHome', {
+                score: result.score,
+                stars: starsCount,
+                userAction: true
+            });
+            
+            resultElements.resultMessage.textContent = '正在返回首页...';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.game-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    startGame(e.target.dataset.game);
+                });
+            });
+            
+            quizElements.prevBtn.addEventListener('click', prevQuestion);
+            quizElements.nextBtn.addEventListener('click', nextQuestion);
+            quizElements.submitBtn.addEventListener('click', () => {
+                modal.classList.add('active');
+            });
+            
+            document.getElementById('play-again-btn').addEventListener('click', restartGame);
+            document.getElementById('back-home-btn').addEventListener('click', returnToHome);
+            document.getElementById('review-btn').addEventListener('click', showCheckPage);
+            
+            document.getElementById('back-to-result-btn').addEventListener('click', () => {
+                showPage('result');
+            });
+            
+            checkElements.prevBtn.addEventListener('click', prevCheckQuestion);
+            checkElements.nextBtn.addEventListener('click', nextCheckQuestion);
+            
+            cancelSubmitBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+            
+            confirmSubmitBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                showResult();
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

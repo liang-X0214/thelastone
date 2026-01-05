@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>古诗拼图游戏</title>
+    <style>
+        @font-face {
+            font-family: 'MyFont';
+            src: url('img/yezigongchangxiaoshitou.ttf') format('truetype');
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: MyFont;
+            background: linear-gradient(135deg, #eadf66, #7ea298);
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        h1, .container-title, .info-item, .hint, button {
+            font-family: 'MyFont', sans-serif;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .puzzle-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #puzzle-board, #pieces-area {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            border: 2px solid white;
+            border-radius: 5px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #pieces-area {
+            height: 150px;
+            border: 2px dashed white;
+        }
+        
+        .puzzle-piece {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-size: 300px 300px;
+            background-repeat: no-repeat;
+            touch-action: none;
+            user-select: none;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-sizing: border-box;
+            transition: transform 0.2s;
+        }
+        
+        .puzzle-piece.dragging {
+            transform: scale(1.05);
+            z-index: 1000;
+            opacity: 0.9;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        .puzzle-piece.correct {
+            border: 3px solid #4CAF50;
+        }
+        
+        .error-tip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            z-index: 1000;
+            animation: fadeOut 1s ease-in-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .modal-content p {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .test-btn {
+            background: #2196F3;
+        }
+        
+        .home-btn {
+            background: #9C27B0;
+        }
+        
+        .restart-btn {
+            background: #FF9800;
+        }
+        
+        /* 开始弹窗样式 */
+        #start-modal .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        #start-modal h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        
+        #start-modal p {
+            margin-bottom: 8px;
+        }
+        
+        #start-modal ol, #start-modal ul {
+            margin-bottom: 10px;
+        }
+        
+        #start-modal li {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>古诗拼图游戏</h1>
+        <p>拖动碎片到正确位置完成拼图</p>
+    </div>
+    
+    <div class="game-info">
+        <div class="info-item">当前拼图: <span id="current-puzzle">1/4</span></div>
+        <div class="info-item">已完成: <span id="completed-puzzles">0/4</span></div>
+    </div>
+    
+    <div class="puzzle-container">
+        <div class="container-title" id="puzzle-title">拼图目标</div>
+        <div id="puzzle-board"></div>
+    </div>
+    
+    <div class="puzzle-container">
+        <div class="container-title">拼图碎片</div>
+        <div id="pieces-area"></div>
+    </div>
+    
+    <div class="hint">提示：按住拼图块拖动到左侧放置区域</div>
+    
+    <div id="error-tip-container"></div>
+    
+    <!-- 开始游戏弹窗 -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2>女诗人古诗拼图</h2>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <p><strong>游戏介绍：</strong></p>
+                <p>本游戏精选了中国历史上四位著名女诗人的经典作品，通过拼图形式让您感受古诗之美。</p>
+                <p>您将依次完成四幅古诗拼图，每完成一幅即可了解该诗的背景知识。</p>
+            </div>
+            <div style="text-align: left; margin-bottom: 20px;">
+                <p><strong>操作说明：</strong></p>
+                <ol style="padding-left: 20px; margin: 10px 0;">
+                    <li>拖动右侧拼图碎片到左侧拼图板</li>
+                    <li>将碎片放到正确位置（3×3网格）</li>
+                    <li>所有9个碎片放置正确后进入下一关</li>
+                    <li>完成四首古诗拼图即可通关</li>
+                </ol>
+            </div>
+            <div style="text-align: left; margin-bottom: 20px; background: #f5f5f5; padding: 10px; border-radius: 5px;">
+                <p><strong>四位女诗人：</strong></p>
+                <ul style="padding-left: 20px; margin: 5px 0;">
+                    <li>卓文君 - 汉代才女</li>
+                    <li>李冶 - 唐代女诗人</li>
+                    <li>李清照 - 宋代词人</li>
+                    <li>秋瑾 - 近代革命家</li>
+                </ul>
+            </div>
+            <button id="start-game-btn">开始游戏</button>
+        </div>
+    </div>
+    
+    <!-- 知识介绍弹窗 -->
+    <div id="knowledge-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="knowledge-title">知识介绍</h2>
+            <p id="knowledge-text"></p>
+            <div class="button-group">
+                <button id="continue-btn">继续游戏</button>
+                <button id="knowledge-home-btn" class="home-btn">返回主界面</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏结束弹窗 -->
+    <div id="end-modal" class="modal">
+        <div class="modal-content">
+            <h2>恭喜完成所有拼图！</h2>
+            <p>你已经完成了四首古诗的拼图！</p>
+            <div class="button-group">
+                <button id="restart-btn" class="restart-btn">重新开始</button>
+                <button id="test-btn" class="test-btn">开始测验</button>
+                <button id="end-home-btn" class="home-btn">返回主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const POEMS = [
+            { 
+                title: "《白头吟》-卓文君", 
+                image: "img/play1.png", 
+                knowledge: "皑如山上雪，皎若云间月。愿得一心人，白头不相离。以冰雪明志，坚守爱情专一，决绝又深情。" 
+            },
+            { 
+                title: "《八至》-李冶", 
+                image: "img/play2.png", 
+                knowledge: "至近至远东西，至深至浅清溪。至高至明日月，至亲至疏夫妻。用极简文字道尽人际关系的辩证与微妙。" 
+            },
+            { 
+                title: "《一剪梅》-李清照", 
+                image: "img/play3.png", 
+                knowledge: "此情无计可消除，才下眉头，却上心头。细腻刻画相思之苦，将愁绪写得婉转缠绵。" 
+            },
+            { 
+                title: "《对酒》-秋瑾", 
+                image: "img/play4.png", 
+                knowledge: "一腔热血勤珍重，洒去犹能化碧涛。以碧涛喻热血，抒发投身革命的家国豪情。" 
+            }
+        ];
+
+        // 游戏状态管理
+        class GameState {
+            constructor() {
+                this.currentGame = 0;
+                this.completedGames = 0;
+                this.correctPieces = 0;
+                this.draggedPiece = null;
+                this.touchOffset = { x: 0, y: 0 };
+            }
+            
+            reset() {
+                this.currentGame = 0;
+                this.completedGames = 0;
+                this.correctPieces = 0;
+                this.draggedPiece = null;
+            }
+            
+            nextGame() {
+                this.currentGame++;
+                this.correctPieces = 0;
+            }
+            
+            completeGame() {
+                this.completedGames++;
+            }
+        }
+
+        // DOM元素引用
+        const DOM = {
+            board: document.getElementById('puzzle-board'),
+            piecesArea: document.getElementById('pieces-area'),
+            title: document.getElementById('puzzle-title'),
+            currentEl: document.getElementById('current-puzzle'),
+            completedEl: document.getElementById('completed-puzzles'),
+            knowledgeModal: document.getElementById('knowledge-modal'),
+            endModal: document.getElementById('end-modal'),
+            startModal: document.getElementById('start-modal'),
+            knowledgeTitle: document.getElementById('knowledge-title'),
+            knowledgeText: document.getElementById('knowledge-text'),
+            errorContainer: document.getElementById('error-tip-container')
+        };
+
+        // 游戏状态实例
+        const gameState = new GameState();
+
+        // 初始化游戏
+        function initGame() {
+            DOM.board.innerHTML = '';
+            DOM.piecesArea.innerHTML = '';
+            
+            const poem = POEMS[gameState.currentGame];
+            DOM.title.textContent = poem.title;
+            DOM.currentEl.textContent = `${gameState.currentGame + 1}/4`;
+            DOM.completedEl.textContent = `${gameState.completedGames}/4`;
+            
+            createPuzzleBoard(poem);
+            createPuzzlePieces(poem);
+        }
+
+        // 创建拼图板
+        function createPuzzleBoard(poem) {
+            for (let i = 0; i < 9; i++) {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                
+                const target = document.createElement('div');
+                target.className = 'target-cell';
+                target.style.cssText = `
+                    position: absolute;
+                    width: 100px;
+                    height: 100px;
+                    left: ${col * 100}px;
+                    top: ${row * 100}px;
+                    border: 1px dashed rgba(255, 255, 255, 0.3);
+                `;
+                target.dataset.index = i;
+                DOM.board.appendChild(target);
+            }
+        }
+
+        // 创建拼图碎片
+        function createPuzzlePieces(poem) {
+            for (let i = 0; i < 9; i++) {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                const bgX = -col * 100;
+                const bgY = -row * 100;
+                
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                piece.dataset.index = i;
+                
+                piece.style.cssText = `
+                    background-image: url(${poem.image});
+                    background-position: ${bgX}px ${bgY}px;
+                    background-size: 300px 300px;
+                    background-repeat: no-repeat;
+                    left: ${10 + Math.random() * 180}px;
+                    top: ${10 + Math.random() * 30}px;
+                    border: 2px solid rgba(255, 255, 255, 0.7);
+                `;
+                
+                piece.addEventListener('touchstart', startDrag, { passive: false });
+                piece.addEventListener('mousedown', startDrag);
+                
+                DOM.piecesArea.appendChild(piece);
+            }
+        }
+
+        // 开始拖动
+        function startDrag(e) {
+            if (this.classList.contains('correct')) return;
+            
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            
+            gameState.draggedPiece = this;
+            const rect = this.getBoundingClientRect();
+            gameState.touchOffset.x = touch.clientX - rect.left;
+            gameState.touchOffset.y = touch.clientY - rect.top;
+            
+            this.classList.add('dragging');
+            
+            document.body.appendChild(this);
+            
+            this.style.cssText = `
+                position: fixed;
+                z-index: 1000;
+                left: ${rect.left}px;
+                top: ${rect.top}px;
+                width: 100px;
+                height: 100px;
+                background-image: ${this.style.backgroundImage};
+                background-position: ${this.style.backgroundPosition};
+                background-size: ${this.style.backgroundSize};
+                background-repeat: ${this.style.backgroundRepeat};
+                border: ${this.style.border};
+                transform: scale(1.05);
+                opacity: 0.9;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            `;
+            
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', endDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', endDrag);
+        }
+
+        // 拖动中
+        function drag(e) {
+            if (!gameState.draggedPiece) return;
+            
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            
+            gameState.draggedPiece.style.left = (touch.clientX - gameState.touchOffset.x) + 'px';
+            gameState.draggedPiece.style.top = (touch.clientY - gameState.touchOffset.y) + 'px';
+        }
+
+        // 结束拖动
+        function endDrag(e) {
+            if (!gameState.draggedPiece) return;
+            
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            const boardRect = DOM.board.getBoundingClientRect();
+            
+            if (isInBoard(touch, boardRect)) {
+                handleDrop(touch, boardRect);
+            } else {
+                returnToPiecesArea();
+            }
+            
+            cleanupDragEvents();
+            gameState.draggedPiece = null;
+        }
+
+        // 检查是否在拼图板内
+        function isInBoard(touch, boardRect) {
+            return touch.clientX >= boardRect.left && touch.clientX <= boardRect.right &&
+                   touch.clientY >= boardRect.top && touch.clientY <= boardRect.bottom;
+        }
+
+        // 处理放置
+        function handleDrop(touch, boardRect) {
+            const x = touch.clientX - boardRect.left;
+            const y = touch.clientY - boardRect.top;
+            const col = Math.floor(x / 100);
+            const row = Math.floor(y / 100);
+            const cellIndex = row * 3 + col;
+            const pieceIndex = parseInt(gameState.draggedPiece.dataset.index);
+            
+            if (isCorrectPlacement(cellIndex, pieceIndex)) {
+                placeCorrectly(col, row);
+                checkGameComplete();
+            } else {
+                showError('位置不对！再试试看。');
+                returnToPiecesArea();
+            }
+        }
+
+        // 检查是否正确放置
+        function isCorrectPlacement(cellIndex, pieceIndex) {
+            return cellIndex >= 0 && cellIndex <= 8 && cellIndex === pieceIndex;
+        }
+
+        // 正确放置拼图
+        function placeCorrectly(col, row) {
+            gameState.draggedPiece.style.cssText = `
+                position: absolute;
+                left: ${col * 100}px;
+                top: ${row * 100}px;
+                z-index: 10;
+                width: 100px;
+                height: 100px;
+                background-image: ${gameState.draggedPiece.style.backgroundImage};
+                background-position: ${gameState.draggedPiece.style.backgroundPosition};
+                background-size: ${gameState.draggedPiece.style.backgroundSize};
+                background-repeat: ${gameState.draggedPiece.style.backgroundRepeat};
+                border: 3px solid #4CAF50;
+                transform: none;
+                opacity: 1;
+                box-shadow: none;
+            `;
+            gameState.draggedPiece.classList.add('correct');
+            gameState.draggedPiece.classList.remove('dragging');
+            DOM.board.appendChild(gameState.draggedPiece);
+            
+            gameState.correctPieces++;
+        }
+
+        // 返回碎片区
+        function returnToPiecesArea() {
+            if (gameState.draggedPiece) {
+                DOM.piecesArea.appendChild(gameState.draggedPiece);
+                gameState.draggedPiece.style.cssText = `
+                    position: absolute;
+                    left: ${10 + Math.random() * 180}px;
+                    top: ${10 + Math.random() * 30}px;
+                    z-index: 10;
+                    width: 100px;
+                    height: 100px;
+                    background-image: ${gameState.draggedPiece.style.backgroundImage};
+                    background-position: ${gameState.draggedPiece.style.backgroundPosition};
+                    background-size: ${gameState.draggedPiece.style.backgroundSize};
+                    background-repeat: ${gameState.draggedPiece.style.backgroundRepeat};
+                    border: ${gameState.draggedPiece.style.border || '2px solid rgba(255, 255, 255, 0.7)'};
+                    transform: none;
+                    opacity: 1;
+                    box-shadow: none;
+                `;
+                gameState.draggedPiece.classList.remove('dragging');
+            }
+        }
+
+        // 清理拖动事件
+        function cleanupDragEvents() {
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', endDrag);
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        // 检查游戏是否完成
+        function checkGameComplete() {
+            if (gameState.correctPieces === 9) {
+                setTimeout(showKnowledge, 500);
+            }
+        }
+
+        // 显示错误提示
+        function showError(message) {
+            const tip = document.createElement('div');
+            tip.className = 'error-tip';
+            tip.textContent = message;
+            DOM.errorContainer.appendChild(tip);
+            setTimeout(() => tip.remove(), 1000);
+        }
+
+        // 显示知识介绍
+        function showKnowledge() {
+            const poem = POEMS[gameState.currentGame];
+            DOM.knowledgeTitle.textContent = poem.title;
+            DOM.knowledgeText.textContent = poem.knowledge;
+            DOM.knowledgeModal.style.display = 'flex';
+        }
+
+        // 继续游戏
+        function continueGame() {
+            DOM.knowledgeModal.style.display = 'none';
+            gameState.completeGame();
+            
+            if (gameState.completedGames < 4) {
+                gameState.nextGame();
+                initGame();
+            } else {
+                showEndModal();
+            }
+        }
+
+        // 显示结束弹窗
+        function showEndModal() {
+            DOM.endModal.style.display = 'flex';
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            DOM.endModal.style.display = 'none';
+            gameState.reset();
+            initGame();
+        }
+
+        // 开始测验（跳转到答题游戏）
+        function startTest() {
+            // 保存拼图完成状态
+            localStorage.setItem('puzzleCompleted', 'true');
+            localStorage.setItem('lastPuzzleTime', new Date().toISOString());
+            
+            // 跳转到答题游戏
+            if (window.parent && window.parent.startQuizGame) {
+                window.parent.startQuizGame();
+            } else {
+                // 假设答题游戏主文件为 quiz-main.html，答题1界面为 quiz-question1.html
+                window.location.href = 'question1.html?from=puzzle';
+            }
+        }
+
+        // 返回主界面
+        function goBackHome() {
+            if (window.parent && window.parent.closeGame) {
+                window.parent.closeGame();
+            } else {
+                window.history.back();
+            }
+        }
+
+        // 事件监听器设置
+        function setupEventListeners() {
+            // 开始游戏按钮
+            document.getElementById('start-game-btn').onclick = () => {
+                DOM.startModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
+            
+            // 继续游戏按钮
+            document.getElementById('continue-btn').onclick = continueGame;
+            
+            // 重新开始按钮
+            document.getElementById('restart-btn').onclick = restartGame;
+            
+            // 开始测验按钮
+            document.getElementById('test-btn').onclick = startTest;
+            
+            // 返回主界面按钮
+            document.getElementById('knowledge-home-btn').onclick = goBackHome;
+            document.getElementById('end-home-btn').onclick = goBackHome;
+            
+            // 防止页面滚动
+            document.addEventListener('touchmove', (e) => {
+                if (gameState.draggedPiece) e.preventDefault();
+            }, { passive: false });
+        }
+
+        // 初始化
+        window.onload = () => {
+            initGame();
+            setupEventListeners();
+        };
+    </script>
+</body>
+</html>

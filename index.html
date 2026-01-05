@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古代女性职业图鉴</title>
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <style>
+        /* 基础重置 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+        
+        /* 字体定义 */
+        @font-face { font-family: 'MyFont'; src: url('img/yezigongchangxiaoshitou.ttf') format('truetype'); }
+        
+        /* 页面容器 */
+        .page { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+        .home-page { background-image: url('img/first.png'); background-size: cover; background-position: center; }
+        .main-page { display: none; position: fixed; top: 0; left: 0; }
+        
+        /* 首页标题 */
+        .title-overlay { position: absolute; top: 15%; left: 0; width: 100%; text-align: center; z-index: 10; }
+        .main-title { font-family: 'MyFont', sans-serif; font-size: 5rem; color: seagreen; 
+                      text-shadow: 5px 5px 15px rgba(0,0,0,0.9); letter-spacing: 6px; margin-bottom: 25px; }
+        .sub-title { font-family: 'MyFont', sans-serif; font-size: 2rem; color: rgba(255,255,255,0.9); 
+                     text-shadow: 3px 3px 10px rgba(0,0,0,0.8); letter-spacing: 3px; }
+        
+        /* 按钮样式 */
+        .enter-btn { position: absolute; left: 50%; top: 70%; transform: translate(-50%, -50%); 
+                     width: 200px; cursor: pointer; z-index: 10; }
+        .enter-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
+        
+        /* 状态栏 */
+        .status-bar { position: fixed; top: 5%; left: 0; width: 100%; height: 80px; 
+                      display: flex; justify-content: space-between; align-items: center; 
+                      padding: 0 30px; z-index: 100; }
+        .back-btn { width: 100px; height: auto; cursor: pointer; }
+        .icon-img { width: 80px; height: auto; cursor: pointer; }
+        .icon-img2 { 
+            width: 140px; 
+            height: auto;
+            position: relative; /* 为星星和体力显示提供定位上下文 */
+        }
+        
+        /* === 新增：星星和体力显示样式 === */
+        .stats-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+            text-align: center;
+            width: 120px;
+            pointer-events: none;
+        }
+        
+        .star-count, .energy-count {
+            font-family: 'MyFont', sans-serif;
+            font-size: 18px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        
+        .star-count::before {
+            margin-right: 5px;
+            font-size: 20px;
+        }
+        
+        .energy-count {
+            color: #4CAF50;
+			margin-top:30px;
+        }
+        
+        .energy-count::before {
+            margin-right: 5px;
+            font-size: 18px;
+        }
+        
+        /* 长图滚动区域 */
+        .scroll-container { position: absolute; bottom: 0; left: 0; right: 0; overflow: hidden; }
+        .scroll-wrapper { position: relative; height: 100%; transition: all 0.5s ease; }
+        .scroll-img { width: auto; height: 100%; object-fit: contain; display: block; }
+        
+        /* 人物图标 */
+        .character { position: absolute; cursor: pointer; z-index: 20; transition: transform 0.3s; }
+        .character:hover { transform: scale(1.05); }
+        #character1 { left: 700px; top: 700px; height: 200px; width: 100px; }
+        #character2 { left: 1750px; top: 700px; height: 200px; width: 100px; }
+        #character3 { left: 2100px; top: 700px; height: 200px; width: 110px; }
+        #character4 { left: 2700px; top: 700px; height: 250px; width: 350px; }
+        
+        /* 导航按钮 */
+        .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); 
+                   width: 60px; height: 60px; cursor: pointer; z-index: 50; }
+        .nav-btn:hover { transform: translateY(-50%) scale(1.1); }
+        .nav-left { left: 20px; }
+        .nav-right { right: 20px; }
+        
+        /* 弹窗样式 */
+        .popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                 background: rgba(0,0,0,0.8); z-index: 200; }
+        .close-popup { position: absolute; top: 20px; right: 30px; color: white; 
+                       font-size: 40px; cursor: pointer; background: none; border: none; }
+        .popup-img { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                     max-width: 90%; max-height: 90%; }
+        
+        /* 信息弹窗 */
+        .info-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                      background: rgba(0,0,0,0.7); z-index: 1000; }
+        .info-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background-color: #ffe6a7; padding: 20px; border-radius: 10px; 
+                        min-width: 500px; max-width: 700px; box-shadow: 0 5px 30px rgba(0,0,0,0.3); }
+        
+        /* 关闭按钮 */
+        .close-btn { background: seagreen; color: white; border: none; padding: 8px 25px; 
+                     border-radius: 5px; cursor: pointer; font-size: 16px; float: right; margin-bottom: 15px; }
+        .close-btn:hover { background: #2e8b57; }
+        
+        /* Tab选项卡 */
+        .tab-container { clear: both; margin-top: 30px; }
+        .tab-labels { display: flex; justify-content: center; list-style: none; padding: 0; 
+                      margin: 0; border-bottom: 2px solid #eee; width: 100%; }
+        .tab-labels li { flex: 1; margin: 0; text-align: center; }
+        .tab-label { display: block; width: 100%; height: 50px; background-color: #f8f9fa; 
+                     font-size: 18px; line-height: 50px; text-align: center; 
+                     border-radius: 8px 8px 0 0; cursor: pointer; color: #555; 
+                     border-bottom: none; transition: all 0.3s; text-decoration: none; }
+        .tab-label:hover { background-color: #e9ecef; color: #333; }
+        .tab-label.active { background-color: #27ae60; color: white; font-weight: bold; border-color: #27ae60; }
+        
+        /* Tab内容 */
+        .tab-content-container { position: relative; width: 100%; height: 300px; 
+                                 background-color: #f8f9fa; border-radius: 0 0 8px 8px; }
+        .tab-content { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                       opacity: 0; transition: opacity 0.3s ease; overflow-y: auto; }
+        .tab-content.active { display: block; opacity: 1; position: relative; }
+        .tab-content p { margin-bottom: 10px; color: #333; text-align: left; 
+                         font-size: 10px; line-height: 1.5; text-indent: 2em; }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .info-content { min-width: 90%; max-width: 95%; padding: 15px; }
+            .main-title { font-size: 3rem; }
+            .sub-title { font-size: 1.5rem; }
+            .tab-label { height: 45px; font-size: 16px; line-height: 45px; }
+            .tab-content p { font-size: 14px; line-height: 1.6; }
+            .stats-display { width: 100px; }
+            .star-count, .energy-count { font-size: 16px; }
+        }
+        
+        /* === 新增的 iframe 容器样式 === */
+        .game-container { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1000; 
+            background: white; 
+        }
+        
+        .game-close-btn { 
+            position: absolute; 
+            top: 15px; 
+            right: 15px; 
+            z-index: 1001; 
+            background: seagreen; 
+            color: white; 
+            border: none; 
+            padding: 8px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+        
+        .game-close-btn:hover { 
+            background: #2e8b57; 
+        }
+        
+        .game-frame { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        
+        /* === 新增：星星获得提示样式 === */
+        .star-notification {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 193, 7, 0.95));
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            z-index: 2000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: starNotificationAnimation 2.5s ease-in-out;
+        }
+        
+        .star-notification::before {
+            content: '★';
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        @keyframes starNotificationAnimation {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        }
+        /* === 结束新增样式 === */
+    </style>
+</head>
+<body>
+    <!-- 首页 -->
+    <div class="page home-page" id="homePage">
+        <div class="title-overlay">
+            <div class="main-title">一襟烟雨一生业</div>
+            <div class="sub-title">——古代女性职业速通</div>
+        </div>
+        <img class="enter-btn" src="img/enter.png" alt="进入" onclick="enterMainPage()">
+    </div>
+    
+    <!-- 主页面 -->
+    <div class="page main-page" id="mainPage">
+        <div class="status-bar">
+            <img src="img/leave.png" class="back-btn" onclick="goBackHome()">
+            <img src="img/lab.png" class="icon-img" onclick="showInfoPopup()">
+            <div class="icon-img2-container" style="position: relative;">
+                <img src="img/bond.png" class="icon-img2">
+                <!-- 新增：星星和体力显示 -->
+                <div class="stats-display">
+                    <div class="star-count">0</div>
+                    <div class="energy-count">50</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="scroll-container">
+            <div class="scroll-wrapper" id="scrollWrapper">
+                <img class="scroll-img" src="img/back.png" alt="背景图">
+                <img class="character" id="character1" src="img/person1.png" onclick="openGame('game1.html')">
+                <img class="character" id="character2" src="img/person2.png" onclick="openGame('game2.html')">
+                <img class="character" id="character3" src="img/person3.png" onclick="openGame('game3.html')">
+                <img class="character" id="character4" src="img/person5.png" onclick="openGame('game4.html')">
+            </div>
+        </div>
+        
+        <img class="nav-btn nav-left" src="img/toleft.png" onclick="scrollImage('left')">
+        <img class="nav-btn nav-right" src="img/toright.png" onclick="scrollImage('right')">
+    </div>
+    
+    <!-- 信息弹窗 -->
+    <div class="info-popup" id="infoPopup">
+        <div class="info-content">
+            <button class="close-btn" onclick="closeInfoPopup()">关闭</button>
+            
+            <div class="tab-container">
+                <ul class="tab-labels">
+                    <li><a class="tab-label active" data-tab="tab1">厨娘</a></li>
+                    <li><a class="tab-label" data-tab="tab2">女诗人</a></li>
+                    <li><a class="tab-label" data-tab="tab3">乐妓</a></li>
+                    <li><a class="tab-label" data-tab="tab4">闺塾师</a></li>
+                </ul>
+                
+                <div class="tab-content-container">
+                    <div class="tab-content active" id="tab1">
+                        <p>古代厨娘是中国古代以烹饪为职业的女性群体，活跃于宫廷、官宦富商之家及市井食肆，是传统饮食文化的重要传承者与实践者。</p>
+                        <p>古代厨娘的社会地位整体属于仆役阶层，但技艺精湛者会获得雇主敬重。其厨艺多靠师徒相授或家族传承，不少人能凭借一手好厨艺养家糊口，甚至留下独门菜谱。</p>
+                        <p>宋代是厨娘文化较为兴盛的时期，《东京梦华录》《梦粱录》等典籍中，就有关于不同阶层厨娘的生动记载。</p>
+                    </div>
+                    <div class="tab-content" id="tab2">
+                        <p>古代女诗人是中国古典文学史上的特殊群体，她们突破古代社会对女性"无才便是德"的桎梏，为古典诗词增添了柔婉而深刻的独特色彩。</p>
+                        <p>起源早，历代延续现存可考的早期女诗人可追溯至汉代，如蔡琰（蔡文姬）；魏晋南北朝时期，才女创作逐渐增多；唐代诗歌鼎盛，女诗人数量与质量均有提升。</p>
+                        <p>古代女诗人的创作，打破了男性主导的文学话语权，展现了女性独特的生命体验与审美视角。</p>
+                    </div>
+                    <div class="tab-content" id="tab3">
+                        <p>古代乐妓是中国古代社会中以音乐、歌舞、曲艺为技艺，服务于宫廷、官府、市井等不同场合的女性群体。</p>
+                        <p>古代乐妓是传统音乐、舞蹈、曲艺的重要传承者。她们的表演实践推动了乐曲的改编与创新，比如唐代燕乐的繁荣就离不开教坊乐妓的演绎。</p>
+                        <p>乐妓的社会地位整体处于社会底层，属于"贱籍"，人身自由受到不同程度的限制，婚姻与生活大多身不由己。</p>
+                    </div>
+                    <div class="tab-content" id="tab4">
+                        <p>古代闺塾师是中国古代专门为官宦、书香门第的女子提供启蒙与才艺教育的女性教师，是古代女性教育体系中独特且重要的群体。</p>
+                        <p>教学特点教学场所私密，多在雇主家的闺阁或书房，避免女子抛头露面；采用一对一或小范围教学，根据学生的资质与兴趣因材施教。</p>
+                        <p>闺塾师不仅是古代女性文化知识与才艺的传播者，更在潜移默化中推动了女性文学的发展。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- === 新增的游戏容器 === -->
+    <div class="game-container" id="gameContainer">
+        <iframe class="game-frame" id="gameFrame" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        // 全局变量
+        let scrollPosition = 0;
+        const scrollStep = 400;
+        let minScrollPosition = 0;
+        let stars = 0; // 星星数量
+        let energy = 50; // 体力数量
+        
+        // 页面初始化
+        window.addEventListener('load', () => {
+            const showMainPage = sessionStorage.getItem('showMainPage') === 'true';
+            const savedPosition = sessionStorage.getItem('scrollPosition');
+            
+            // 从本地存储加载星星和体力数据
+            const savedStars = localStorage.getItem('ancientWomenGameStars');
+            const savedEnergy = localStorage.getItem('ancientWomenGameEnergy');
+            
+            if (savedStars) stars = parseInt(savedStars);
+            if (savedEnergy) energy = parseInt(savedEnergy);
+            
+            updateStatsDisplay();
+            
+            if (showMainPage) {
+                showMainPageDirectly();
+                if (savedPosition) {
+                    scrollPosition = parseInt(savedPosition);
+                    document.getElementById('scrollWrapper').style.transform = `translateX(${scrollPosition}px)`;
+                }
+            }
+            
+            initTabSystem();
+            initCharacterClickHandlers();
+            
+            // === 新增：监听来自iframe的消息 ===
+            window.addEventListener('message', handleIframeMessage, false);
+            
+            // 检查URL参数，处理从游戏返回的情况
+            handleUrlParams();
+        });
+        
+        // 处理URL参数（用于处理从游戏直接返回的情况）
+        function handleUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const score = urlParams.get('score');
+            const starsParam = urlParams.get('stars');
+            
+            if (score || starsParam) {
+                const starsEarned = parseInt(starsParam || Math.ceil(parseInt(score || 0) / 20));
+                if (starsEarned > 0) {
+                    addStars(starsEarned);
+                    showStarNotification(starsEarned);
+                }
+                
+                // 清理URL参数
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+        
+        // === 新增：处理iframe消息的函数 ===
+        function handleIframeMessage(event) {
+            console.log('收到iframe消息:', event.data);
+            
+            // 确保消息来自同源（安全考虑）
+            if (!event.origin.startsWith(window.location.origin)) {
+                return;
+            }
+            
+            if (event.data) {
+                switch (event.data.type) {
+                    case 'gameStarted':
+                        console.log('游戏开始:', event.data.gameName);
+                        break;
+                        
+                    case 'gameCompleted':
+                        console.log('游戏完成:', event.data);
+                        // 这里不自动关闭游戏，等待用户点击返回首页按钮
+                        break;
+                        
+                    case 'returnToHome':
+                        console.log('游戏请求返回首页:', event.data);
+                        handleGameReturn(event.data);
+                        break;
+                        
+                    case 'getParentState':
+                        // 响应子页面的请求，发送当前状态
+                        event.source.postMessage({
+                            type: 'parentState',
+                            stars: stars,
+                            energy: energy
+                        }, event.origin);
+                        break;
+                }
+            }
+        }
+        
+        // === 新增：处理游戏返回的函数 ===
+        function handleGameReturn(data) {
+            const starsEarned = data.stars || 0;
+            
+            if (starsEarned > 0) {
+                addStars(starsEarned);
+                showStarNotification(starsEarned);
+            }
+            
+            // 关闭游戏界面
+            closeGame();
+        }
+        
+        // 更新星星和体力显示
+        function updateStatsDisplay() {
+            const starElement = document.querySelector('.star-count');
+            const energyElement = document.querySelector('.energy-count');
+            
+            if (starElement) starElement.textContent = stars;
+            if (energyElement) energyElement.textContent = energy;
+            
+            // 保存到本地存储
+            localStorage.setItem('ancientWomenGameStars', stars);
+            localStorage.setItem('ancientWomenGameEnergy', energy);
+        }
+        
+        // 减少体力
+        function decreaseEnergy() {
+            if (energy >= 5) {
+                energy -= 5;
+                updateStatsDisplay();
+                return true;
+            } else {
+                alert('体力不足，无法继续游戏！');
+                return false;
+            }
+        }
+        
+        // 增加星星
+        function addStars(count) {
+            stars += count;
+            updateStatsDisplay();
+        }
+        
+        // 初始化人物点击事件
+        function initCharacterClickHandlers() {
+            const characters = document.querySelectorAll('.character');
+            characters.forEach(character => {
+                // 保存原有的onclick事件
+                const originalOnClick = character.onclick;
+                character.onclick = function(e) {
+                    // 先检查体力
+                    if (!decreaseEnergy()) {
+                        return false;
+                    }
+                    
+                    // 执行原有的onclick事件
+                    if (originalOnClick) {
+                        originalOnClick.call(this, e);
+                    }
+                };
+            });
+        }
+        
+        // 页面控制函数
+        function enterMainPage() {
+            clearSessionStorage();
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            initScroll();
+            updateStatsDisplay();
+        }
+        
+        function showMainPageDirectly() {
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            initScroll();
+            updateStatsDisplay();
+        }
+        
+        function goBackHome() {
+            clearSessionStorage();
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('homePage').style.display = 'block';
+            resetScrollPosition();
+        }
+        
+        // 弹窗控制
+        function showInfoPopup() {
+            document.getElementById('infoPopup').style.display = 'block';
+        }
+        
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').style.display = 'none';
+            resetTabs();
+        }
+        
+        // === 修改后的游戏页面跳转函数 ===
+        function openGame(pageUrl) {
+            saveCurrentState();
+            
+            // 隐藏主页面内容
+            document.querySelector('.scroll-container').style.display = 'none';
+            document.querySelector('.nav-left').style.display = 'none';
+            document.querySelector('.nav-right').style.display = 'none';
+            document.querySelector('.status-bar').style.display = 'none';
+            
+            // 显示游戏容器
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            // 加载游戏页面到 iframe
+            const gameFrame = document.getElementById('gameFrame');
+            gameFrame.src = pageUrl;
+            
+            // 确保iframe加载完成后发送初始状态
+            gameFrame.onload = function() {
+                try {
+                    // 发送初始状态到子页面
+                    gameFrame.contentWindow.postMessage({
+                        type: 'initFromParent',
+                        stars: stars,
+                        energy: energy
+                    }, '*');
+                } catch (e) {
+                    console.log('发送初始状态失败:', e);
+                }
+            };
+        }
+        
+        // 显示获得星星的通知
+        function showStarNotification(count) {
+            // 移除现有的通知
+            const existingNotification = document.querySelector('.star-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'star-notification';
+            notification.innerHTML = `获得 ${count} 颗星星！`;
+            
+            document.body.appendChild(notification);
+            
+            // 自动移除通知
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 2500);
+        }
+        
+        // === 修改后的关闭游戏函数 ===
+        function closeGame() {
+            // 显示主页面内容
+            document.querySelector('.scroll-container').style.display = 'block';
+            document.querySelector('.nav-left').style.display = 'block';
+            document.querySelector('.nav-right').style.display = 'block';
+            document.querySelector('.status-bar').style.display = 'flex';
+            
+            // 隐藏游戏容器
+            document.getElementById('gameContainer').style.display = 'none';
+            
+            // 清除 iframe 内容
+            document.getElementById('gameFrame').src = '';
+            
+            // 更新显示
+            updateStatsDisplay();
+        }
+        
+        // 滚动控制
+        function initScroll() {
+            const scrollImg = document.querySelector('.scroll-img');
+            scrollImg.onload = calculateScrollRange;
+        }
+        
+        function calculateScrollRange() {
+            const imgWidth = document.querySelector('.scroll-img').offsetWidth;
+            const containerWidth = document.querySelector('.scroll-container').offsetWidth;
+            minScrollPosition = -(imgWidth - containerWidth);
+        }
+        
+        function scrollImage(direction) {
+            const imgWidth = document.querySelector('.scroll-img').offsetWidth;
+            const containerWidth = document.querySelector('.scroll-container').offsetWidth;
+            minScrollPosition = -(imgWidth - containerWidth);
+            
+            if (direction === 'left') {
+                scrollPosition = Math.min(scrollPosition + scrollStep, 0);
+            } else {
+                scrollPosition = Math.max(scrollPosition - scrollStep, minScrollPosition);
+            }
+            
+            document.getElementById('scrollWrapper').style.transform = `translateX(${scrollPosition}px)`;
+        }
+        
+        function resetScrollPosition() {
+            scrollPosition = 0;
+            document.getElementById('scrollWrapper').style.transform = `translateX(0px)`;
+        }
+        
+        // Tab系统
+        function initTabSystem() {
+            const labels = document.querySelectorAll('.tab-label');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            labels.forEach(label => {
+                label.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabId = label.getAttribute('data-tab');
+                    
+                    labels.forEach(l => l.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    label.classList.add('active');
+                    document.getElementById(tabId)?.classList.add('active');
+                });
+            });
+        }
+        
+        function resetTabs() {
+            const labels = document.querySelectorAll('.tab-label');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            labels.forEach(label => label.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            if (labels[0]) labels[0].classList.add('active');
+            if (contents[0]) contents[0].classList.add('active');
+        }
+        
+        // 状态管理
+        function saveCurrentState() {
+            sessionStorage.setItem('showMainPage', 'true');
+            sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+        }
+        
+        function clearSessionStorage() {
+            sessionStorage.removeItem('showMainPage');
+            sessionStorage.removeItem('scrollPosition');
+        }
+        
+        // 事件委托
+        document.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('infoPopup')) {
+                closeInfoPopup();
+            }
+        });
+        
+        // 触摸支持
+        let touchStartX = 0;
+        document.querySelector('.scroll-container').addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+        
+        document.querySelector('.scroll-container').addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > 50) {
+                scrollImage(diff > 0 ? 'right' : 'left');
+            }
+        });
+        
+        // 窗口调整
+        window.addEventListener('resize', () => {
+            const scrollImg = document.querySelector('.scroll-img');
+            if (scrollImg.complete) {
+                calculateScrollRange();
+            }
+        });
+        
+        // 暴露给游戏页面的接口
+        window.gameAPI = {
+            addStars: addStars,
+            getStars: () => stars,
+            getEnergy: () => energy
+        };
+    </script>
+</body>
+</html>

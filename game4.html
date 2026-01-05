@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>闺塾师历险</title>
+    <style>
+		@font-face { font-family: 'MyFont'; src: url('img/yezigongchangxiaoshitou.ttf') format('truetype'); }
+        /* 新增：游戏介绍弹窗样式 */
+        .intro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+        
+        .intro-modal.hidden {
+            display: none;
+        }
+        
+        .intro-content {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+            overflow-y: auto;
+            position: relative;
+            color: #fff;
+        }
+        
+        .intro-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FF4500;
+        }
+        
+        .intro-title {
+            font-size: 2.2rem;
+            color: #FFD700;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .intro-subtitle {
+            font-size: 1.2rem;
+            color: #FF6347;
+            font-style: italic;
+        }
+        
+        .intro-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border-left: 4px solid #4A90E2;
+            backdrop-filter: blur(5px);
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #FF6347;
+            font-size: 1.8rem;
+        }
+        
+        .intro-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e6e6e6;
+            text-align: justify;
+            margin-bottom: 10px;
+        }
+        
+        .controls-guide {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .control-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .control-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 69, 0, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.8rem;
+            color: #FFD700;
+            border: 2px solid #FF6347;
+        }
+        
+        .control-details {
+            flex: 1;
+        }
+        
+        .control-action {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 3px;
+        }
+        
+        .control-desc {
+            font-size: 1rem;
+            color: #b3b3b3;
+        }
+        
+        .game-rules {
+            background: rgba(74, 144, 226, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #32CD32;
+        }
+        
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .rule-item i {
+            color: #32CD32;
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        
+        .rule-text {
+            font-size: 1rem;
+            color: #e6e6e6;
+            line-height: 1.5;
+        }
+        
+        .intro-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .start-game-btn {
+            background: linear-gradient(145deg, #FF4500, #FF6347);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 0 auto 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.4);
+            min-width: 250px;
+        }
+        
+        .start-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 69, 0, 0.6);
+        }
+        
+        .skip-btn {
+            background: transparent;
+            border: none;
+            color: #4A90E2;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 8px 16px;
+        }
+        
+        /* 移动端优化样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: white;
+        }
+        
+        body {
+			font-family: MyFont;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 500px;
+            max-height: 900px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #87CEEB;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: #FFD700;
+        }
+        
+        h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1.2rem;
+            color: #FFD700;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        button {
+            background: linear-gradient(145deg, #FF4500, #FF6347);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            margin: 12px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        
+        .return-btn {
+            background: linear-gradient(145deg, #4A90E2, #357ABD);
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #FFD700;
+            z-index: 50;
+        }
+        
+        #targetScore {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 2px solid #32CD32;
+            z-index: 50;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px;
+            z-index: 50;
+        }
+        
+        #jumpArea {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            z-index: 30;
+        }
+    </style>
+</head>
+<body>
+    <!-- 新增：游戏介绍弹窗 -->
+    <div id="introModal" class="intro-modal">
+        <div class="intro-content">
+            <div class="intro-header">
+                <h1 class="intro-title">闺塾师历险</h1>
+                <p class="intro-subtitle">穿越时空，体验古代闺塾师的奔跑冒险</p>
+            </div>
+            
+            <div class="intro-section">
+                <h2 class="section-title"><i class="fas fa-book"></i> 古代闺塾师简介</h2>
+                <p class="intro-text">
+                    闺塾师，又称"女师"或"闺阁教师"，是古代专门在闺阁中教授贵族女子诗书礼仪、琴棋书画的女性教师。她们大多出身书香门第，或是才名在外的闺阁才女，甚至是辞官归隐的女儒。
+                </p>
+                <p class="intro-text">
+                    这些才情卓越的女性不仅要教《女诫》《列女传》等经典，还要指导女红刺绣、插花焚香、茶道礼仪，堪称古代的"全能女子素养教练"。她们在私密的闺房、暖阁中授课，成为连接女性文化与知识的重要纽带。
+                </p>
+                <p class="intro-text">
+                    许多闺塾师还会将自己的诗作、心得传授给学生，这些内容后来成为古代女性文学的重要组成部分，悄悄打破了"女子无才便是德"的传统观念。
+                </p>
+            </div>
+            
+            <div class="intro-section">
+                <h2 class="section-title"><i class="fas fa-gamepad"></i> 游戏操作指南</h2>
+                
+                <div class="controls-guide">
+                    <div class="control-item">
+                        <div class="control-icon">
+                            <i class="fas fa-hand-point-up"></i>
+                        </div>
+                        <div class="control-details">
+                            <div class="control-action">点击/触摸屏幕</div>
+                            <div class="control-desc">跳跃 - 让闺塾师跳过障碍物</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="control-details">
+                            <div class="control-action">向上滑动</div>
+                            <div class="control-desc">长按可实现更高跳跃</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-icon">
+                            <i class="fas fa-keyboard"></i>
+                        </div>
+                        <div class="control-details">
+                            <div class="control-action">空格键/方向键上</div>
+                            <div class="control-desc">键盘控制跳跃</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-rules">
+                    <div class="rule-item">
+                        <i class="fas fa-running"></i>
+                        <div class="rule-text">闺塾师会自动向前奔跑</div>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-hurdle"></i>
+                        <div class="rule-text">成功躲避一个障碍物得10分</div>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-bullseye"></i>
+                        <div class="rule-text">达到100分即可通关成功</div>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="rule-text">碰到障碍物游戏立即结束</div>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <div class="rule-text">分数越高，游戏速度越快</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="intro-footer">
+                <button id="startGameBtn" class="start-game-btn">
+                    <i class="fas fa-play-circle"></i> 开始冒险之旅
+                </button>
+                <button id="skipIntroBtn" class="skip-btn">
+                    跳过介绍，直接开始游戏
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 原有游戏容器 -->
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="score">得分: 0</div>
+        <div id="targetScore">目标: 100分</div>
+        <div id="instructions">⬆️ 向上滑动或点击屏幕跳跃</div>
+        <div id="jumpArea"></div>
+        
+        <!-- 开始界面 -->
+        <div id="startScreen" class="screen">
+            <h1>闺塾师历险</h1>
+            <p>🏃‍️ 帮助闺塾师躲避障碍物</p>
+            <p>⬆️ 向上滑动或点击屏幕跳跃</p>
+            <p>🎯 达到100分即可获胜！</p>
+            <p>💡 躲过一个障碍得10分</p>
+            <button id="startButton">开始冒险</button>
+        </div>
+        
+        <!-- 失败界面 -->
+        <div id="failScreen" class="screen hidden">
+            <h2>游戏结束</h2>
+            <p>😢 你没能达到目标分数</p>
+            <p>最终得分: <span id="finalScore" style="color:#FFD700;font-size:1.8rem;">0</span> 分</p>
+            <div>
+                <button id="restartButton">重新开始</button>
+                <button id="returnToIndexFromFail" class="return-btn">返回主界面</button>
+            </div>
+        </div>
+        
+        <!-- 知识介绍界面 -->
+        <div id="knowledgeScreen" class="screen hidden">
+            <h2>🎉 恭喜通关！</h2>
+            <div id="knowledge">
+                <h3>🎮 关于闺塾师的有趣知识</h3>
+                <p>身份反差萌：她们大多不是刻板的老学究，不少是才名在外的闺阁才女、辞官归隐的女儒，甚至是精通琴棋书画的 "文艺姐姐"，既能教《女诫》，也能陪小姐们吟诗作对。</p>
+                <p>教学内容超丰富：不只是教识字读经，还要手把手教女红刺绣、插花焚香、茶道礼仪，堪称古代 "全能女子素养教练"，目标是培养知书达理的大家闺秀。</p>
+                <p>上课地点很私密：授课从不在宗族祠堂这类公共场合，而是在小姐的闺房、后花园的暖阁里，讲究 "内闱授课"，外人轻易见不到。</p>
+                <p>隐藏的 "文化纽带"：很多闺塾师会把自己的诗作、心得传给学生，这些内容后来成了古代女性文学的重要组成部分，悄悄打破了 "女子无才便是德" 的旧观念。</p>
+            </div>
+            <button id="continueButton">继续</button>
+        </div>
+        
+        <!-- 游戏结束菜单 -->
+        <div id="gameOverScreen" class="screen hidden">
+            <h2>🎊 游戏通关！</h2>
+            <p>恭喜你成功完成第一关！</p>
+            <div>
+                <button id="gameRestartButton">重新游戏</button>
+                <button id="quizButton">开始测验</button>
+                <button id="returnToIndexFromSuccess" class="return-btn">返回主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        // 新增：弹窗控制
+        const introModal = document.getElementById('introModal');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const skipIntroBtn = document.getElementById('skipIntroBtn');
+        
+        // 显示弹窗（页面加载时自动显示）
+        window.addEventListener('load', () => {
+            introModal.classList.remove('hidden');
+        });
+        
+        // 开始游戏按钮点击事件
+        startGameBtn.addEventListener('click', () => {
+            introModal.classList.add('hidden');
+            // 显示原来的开始界面
+            document.getElementById('startScreen').classList.remove('hidden');
+        });
+        
+        // 跳过介绍按钮点击事件
+        skipIntroBtn.addEventListener('click', () => {
+            introModal.classList.add('hidden');
+            // 显示原来的开始界面
+            document.getElementById('startScreen').classList.remove('hidden');
+        });
+        
+        // 游戏变量
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        let gameState = 'start';
+        let score = 0;
+        const TARGET_SCORE = 100;
+        
+        // 图片资源
+        const images = {
+            player: new Image(),
+            obstacle: new Image(),
+            cloud: new Image(),
+            mountain: new Image(),
+            tree: new Image(),
+            ground: new Image()
+        };
+        
+        // 图片路径
+        images.player.src = 'img/xiaoren.png';
+        images.obstacle.src = 'img/scale.png';
+        images.cloud.src = 'img/cloud.png';
+        images.mountain.src = 'img/hill.png';
+        images.tree.src = 'img/tree.png';
+        images.ground.src = 'img/ground.png';
+        
+        // 游戏对象
+        let player = {
+            x: 80,
+            y: 0,
+            width: 72,
+            height: 144,
+            velocityY: 0,
+            jumping: false,
+            groundY: 0
+        };
+        
+        let obstacles = [];
+        let mountains = [];
+        let trees = [];
+        let clouds = [];
+        let lastObstacleTime = 0;
+        let gameSpeed = 3;
+        
+        // 游戏设置
+        const GRAVITY = 0.4;
+        const JUMP_FORCE = -15;
+        const INITIAL_GAME_SPEED = 4;
+        const OBSTACLE_MIN_INTERVAL = 1500;
+        const OBSTACLE_MAX_INTERVAL = 2500;
+        
+        // === 新增：返回主页面的函数 ===
+        function goBackToMain() {
+            // 检查是否在 iframe 中运行
+            if (window.parent && window.parent.closeGame) {
+                // 调用父页面的关闭函数
+                window.parent.closeGame();
+            } else {
+                // 如果没有父页面函数，回退到原来的跳转方式
+                window.location.href = "index.html";
+            }
+        }
+        
+        // 初始化Canvas大小
+        function initCanvas() {
+            const container = document.getElementById('gameContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            player.groundY = canvas.height - 100 - player.height;
+            player.y = player.groundY;
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            score = 0;
+            document.getElementById('score').textContent = `得分: ${score}`;
+            player.y = player.groundY;
+            player.velocityY = 0;
+            player.jumping = false;
+            obstacles = [];
+            mountains = [];
+            trees = [];
+            clouds = [];
+            gameSpeed = INITIAL_GAME_SPEED;
+            lastObstacleTime = Date.now();
+            gameState = 'playing';
+            
+            // 初始创建背景元素
+            for (let i = 0; i < 3; i++) createMountain(canvas.width + i * 300);
+            for (let i = 0; i < 5; i++) createTree(canvas.width + i * 180);
+            for (let i = 0; i < 3; i++) createCloud(canvas.width + i * 300);
+            
+            // 隐藏所有界面
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            
+            // 添加初始障碍物
+            setTimeout(() => createObstacle(), 1000);
+        }
+        
+        // 创建山（从右边界）
+        function createMountain(x) {
+            mountains.push({
+                x: x,
+                y: canvas.height - 410,
+                width: 500,
+                height: 390
+            });
+        }
+        
+        // 创建树（从右边界）
+        function createTree(x) {
+            trees.push({
+                x: x,
+                y: canvas.height - 300,
+                size: 200,
+				width: 250,
+				height:200
+            });
+        }
+        
+        // 创建云（从右边界）
+        function createCloud(x) {
+            clouds.push({
+                x: x,
+                y: 60 + Math.random() * 100,
+                size: 100 + Math.random() * 20
+            });
+        }
+        
+        // 绘制背景
+        function drawBackground() {
+            // 天空
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGradient.addColorStop(0, '#87CEEB');
+            skyGradient.addColorStop(1, '#0a83ed');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 移动并绘制背景元素
+            moveAndDrawBackground();
+            
+            // 地面
+            const groundPattern = ctx.createPattern(images.ground, 'repeat');
+            ctx.fillStyle = groundPattern;
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+        }
+        
+        // 移动并绘制背景元素
+        function moveAndDrawBackground() {
+            // 山
+            for (let i = mountains.length - 1; i >= 0; i--) {
+                const m = mountains[i];
+                m.x -= gameSpeed;
+                
+                if (m.x + m.width < 0) {
+                    mountains.splice(i, 1);
+                    createMountain(canvas.width);
+                } else if (images.mountain.complete) {
+                    ctx.drawImage(images.mountain, m.x, m.y, m.width, m.height);
+                }
+            }
+            
+            // 树
+            for (let i = trees.length - 1; i >= 0; i--) {
+                const t = trees[i];
+                t.x -= gameSpeed;
+                
+                if (t.x + t.size < 0) {
+                    trees.splice(i, 1);
+                    createTree(canvas.width);
+                } else if (images.tree.complete) {
+                    ctx.drawImage(images.tree, t.x, t.y, t.size, t.size);
+                }
+            }
+            
+            // 云
+            for (let i = clouds.length - 1; i >= 0; i--) {
+                const c = clouds[i];
+                c.x -= gameSpeed * 0.7;
+                
+                if (c.x + c.size < 0) {
+                    clouds.splice(i, 1);
+                    createCloud(canvas.width);
+                } else if (images.cloud.complete) {
+                    ctx.drawImage(images.cloud, c.x, c.y, c.size, c.size);
+                }
+            }
+        }
+        
+        // 绘制玩家
+        function drawPlayer() {
+            if (images.player.complete) {
+                ctx.drawImage(images.player, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.fillStyle = '#E52521';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+        }
+        
+        // 绘制障碍物
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                if (images.obstacle.complete) {
+                    ctx.drawImage(images.obstacle, obstacle.x, obstacle.y, 150, 120);
+                } else {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+            });
+        }
+        
+        // 更新玩家位置
+        function updatePlayer() {
+            player.velocityY += GRAVITY;
+            player.y += player.velocityY;
+            
+            if (player.y > player.groundY) {
+                player.y = player.groundY;
+                player.velocityY = 0;
+                player.jumping = false;
+            }
+        }
+        
+        // 更新障碍物
+        function updateObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.x -= gameSpeed;
+            });
+            
+            obstacles = obstacles.filter(obstacle => obstacle.x > -obstacle.width);
+            
+            if (Date.now() - lastObstacleTime > getObstacleInterval() && obstacles.length < 4) {
+                createObstacle();
+                lastObstacleTime = Date.now();
+            }
+        }
+        
+        // 获取障碍物生成间隔
+        function getObstacleInterval() {
+            const base = OBSTACLE_MAX_INTERVAL - (OBSTACLE_MAX_INTERVAL - OBSTACLE_MIN_INTERVAL) * (score / TARGET_SCORE);
+            return Math.max(OBSTACLE_MIN_INTERVAL, base);
+        }
+        
+        // 创建障碍物
+        function createObstacle() {
+            const obstacleHeight = 72 + Math.random() * 18;
+            const obstacleWidth = 63;
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - 100 - obstacleHeight,
+                width: obstacleWidth,
+                height: obstacleHeight,
+                passed: false
+            });
+        }
+        
+        // 检测碰撞
+        function checkCollision() {
+            for (let obstacle of obstacles) {
+                if (
+                    player.x+15 < obstacle.x + obstacle.width &&
+                    player.x + player.width-15 > obstacle.x &&
+                    player.y +15< obstacle.y + obstacle.height &&
+                    player.y + player.height-15 > obstacle.y
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // 检查是否通过障碍物
+        function checkPassedObstacles() {
+            obstacles.forEach(obstacle => {
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    score += 10;
+                    document.getElementById('score').textContent = `得分: ${score}`;
+                    
+                    // 随分数增加游戏速度
+                    gameSpeed = INITIAL_GAME_SPEED + (score / TARGET_SCORE);
+                }
+            });
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameState === 'playing') {
+                updateGame();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 更新游戏
+        function updateGame() {
+            drawBackground();
+            drawPlayer();
+            drawObstacles();
+            
+            updatePlayer();
+            updateObstacles();
+            
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            
+            checkPassedObstacles();
+            
+            if (score >= TARGET_SCORE) {
+                showKnowledgeScreen();
+            }
+        }
+        
+        // 游戏结束
+        function gameOver() {
+            gameState = 'failed';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('failScreen').classList.remove('hidden');
+        }
+        
+        // 显示知识屏幕
+        function showKnowledgeScreen() {
+            gameState = 'knowledge';
+            document.getElementById('knowledgeScreen').classList.remove('hidden');
+        }
+        
+        // 返回主界面
+        function returnToIndexPage() {
+            // === 修改：使用新的返回函数 ===
+            goBackToMain();
+        }
+        
+        // 事件监听
+        function initEventListeners() {
+            document.getElementById('startButton').addEventListener('click', initGame);
+            document.getElementById('restartButton').addEventListener('click', initGame);
+            document.getElementById('gameRestartButton').addEventListener('click', initGame);
+            
+            document.getElementById('continueButton').addEventListener('click', () => {
+                document.getElementById('knowledgeScreen').classList.add('hidden');
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+                gameState = 'gameOver';
+            });
+            
+            document.getElementById('quizButton').addEventListener('click', () => {
+                window.location.href = "question4.html";
+            });
+            
+            // === 修改：返回主界面按钮（失败界面）===
+            document.getElementById('returnToIndexFromFail').addEventListener('click', function() {
+                goBackToMain();
+            });
+            
+            // === 修改：返回主界面按钮（成功界面）===
+            document.getElementById('returnToIndexFromSuccess').addEventListener('click', function() {
+                goBackToMain();
+            });
+            
+            // 跳跃控制
+            const jumpArea = document.getElementById('jumpArea');
+            jumpArea.addEventListener('touchstart', handleJump);
+            jumpArea.addEventListener('click', handleJump);
+            canvas.addEventListener('touchstart', handleJump);
+            canvas.addEventListener('click', handleJump);
+            
+            // 键盘控制
+            document.addEventListener('keydown', (e) => {
+                if (gameState !== 'playing') return;
+                if ((e.code === 'Space' || e.code === 'ArrowUp') && !player.jumping) {
+                    player.velocityY = JUMP_FORCE;
+                    player.jumping = true;
+                }
+            });
+        }
+        
+        // 处理跳跃
+        function handleJump(e) {
+            if (gameState !== 'playing') return;
+            if (!player.jumping) {
+                player.velocityY = JUMP_FORCE;
+                player.jumping = true;
+            }
+            e.preventDefault();
+        }
+        
+        // 初始化
+        window.addEventListener('resize', initCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(initCanvas, 100);
+        });
+        
+        function init() {
+            initCanvas();
+            initEventListeners();
+            gameLoop();
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>琵琶《茉莉花》演奏游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 新增：弹窗样式 */
+		@font-face { font-family: 'MyFont'; src: url('img/yezigongchangxiaoshitou.ttf') format('truetype'); }
+        .intro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .intro-modal.hidden {
+            display: none;
+        }
+        
+        .intro-content {
+            background: linear-gradient(135deg, #f5e6d3 0%, #f0d9c5 100%);
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid #8b4513;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .intro-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #d2691e;
+        }
+        
+        .intro-title {
+            font-size: 24px;
+            color: #8b4513;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .intro-subtitle {
+            font-size: 16px;
+            color: #a0522d;
+        }
+        
+        .intro-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            border-left: 4px solid #8b4513;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #8b4513;
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title i {
+            color: #d2691e;
+        }
+        
+        .intro-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #5d4037;
+            text-align: justify;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .control-item {
+            background: #f8f1e5;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #d2691e;
+        }
+        
+        .control-icon {
+            font-size: 22px;
+            color: #8b4513;
+            margin-bottom: 5px;
+        }
+        
+        .control-action {
+            font-size: 16px;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 3px;
+        }
+        
+        .control-desc {
+            font-size: 13px;
+            color: #a0522d;
+        }
+        
+        .intro-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #d2691e;
+        }
+        
+        .start-game-btn {
+            background: linear-gradient(to right, #2e8b57, #3cb371);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(46, 139, 87, 0.4);
+        }
+        
+        .start-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(46, 139, 87, 0.6);
+        }
+        
+        .skip-btn {
+            background: transparent;
+            border: none;
+            color: #8b4513;
+            font-size: 14px;
+            margin-top: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        /* 基础样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+			font-family: MyFont;
+            background-color:white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 游戏容器 */
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            background: #fffaf0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 游戏界面 */
+        .screen {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            display: none;
+        }
+        
+        /* 主界面 */
+        .main-screen { display: flex; flex-direction: column; }
+        
+        /* 顶部状态栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .score, .timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #8b4513;
+        }
+        .timer { color: #a0522d; display: none; }
+        
+        /* 游戏内容 */
+        .music-title {
+            text-align: center;
+            font-size: 18px;
+            color: #8b4513;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .action-display {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin: 10px 0;
+            border: 2px solid #d2691e;
+        }
+        .action-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .melody-indicator {
+            text-align: center;
+            font-size: 18px;
+            color: #8b4513;
+            margin: 10px 0;
+        }
+        
+        /* 琵琶区域 */
+        .pipa-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fef9f0;
+            border-radius: 15px;
+            margin: 10px 0;
+            padding: 15px;
+        }
+        
+        .pipa {
+            width: 80%;
+            max-width: 250px;
+            position: relative;
+        }
+        .pipa-body {
+            width: 100%;
+            height: 180px;
+            background: #8b4513;
+            border-radius: 50% 50% 30% 30%;
+            position: relative;
+            border: 5px solid #5d4037;
+        }
+        .string { 
+            width: 2px; 
+            height: 70%; 
+            background: #f5f5f5; 
+            position: absolute;
+            top: 15%;
+        }
+        .fret {
+            width: 90%;
+            height: 1px;
+            background: rgba(255,255,255,0.3);
+            position: absolute;
+            left: 5%;
+        }
+        
+        .touch-hint {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+        
+        /* 动作提示 */
+        .action-hint {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #8b4513;
+            background: rgba(210, 105, 30, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        /* 按钮 */
+        .game-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #d2691e;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            margin: 10px;
+            cursor: pointer;
+            width: 90%;
+            max-width: 280px;
+        }
+        .start-btn { background: #2e8b57; }
+        .restart-btn { background: #e74c3c; }
+        .continue-btn { background: #9b59b6; }
+        .back-btn { background: #3498db; }
+        
+        /* 按钮容器 */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+        }
+        
+        /* 其他界面 */
+        .fail-screen { 
+            background: #e74c3c; 
+            color: white;
+            justify-content: center;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .knowledge-screen { 
+            background: #2e8b57; 
+            color: white;
+            justify-content: center;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .end-screen { 
+            background: #d2691e; 
+            color: white;
+            justify-content: center;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen-title { font-size: 28px; margin-bottom: 20px; }
+        .screen-content { font-size: 18px; margin-bottom: 30px; }
+        .score-display { font-size: 24px; margin: 20px 0; }
+        
+        /* 响应式 */
+        @media (max-height: 700px) {
+            .pipa-body { height: 150px; }
+            .action-name { font-size: 24px; }
+            .game-btn { padding: 12px 25px; font-size: 16px; }
+            .intro-content { max-height: 80vh; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 新增：游戏介绍弹窗 -->
+    <div id="introModal" class="intro-modal">
+        <div class="intro-content">
+            <div class="intro-header">
+                <h1 class="intro-title">琵琶《茉莉花》演奏游戏</h1>
+                <p class="intro-subtitle">穿越时空，体验唐代乐妓的琵琶技艺</p>
+            </div>
+            
+            <div class="intro-section">
+                <h2 class="section-title"><i class="fas fa-history"></i> 古代乐妓简介</h2>
+                <p class="intro-text">
+                    在古代中国，乐妓（又称乐伎、艺伎）是精通音乐、舞蹈和诗歌表演的女性艺术家。唐代（618-907年）是乐妓文化的鼎盛时期，她们不仅为宫廷贵族表演，也在民间文艺活动中扮演重要角色。
+                </p>
+                <p class="intro-text">
+                    琵琶作为"弹拨乐器之王"，是乐妓最重要的演奏乐器之一。著名的《霓裳羽衣曲》、《阳关三叠》等经典曲目都离不开琵琶的演绎。乐妓们通过琵琶表达情感，讲述故事，成为古代文化艺术的重要传承者。
+                </p>
+            </div>
+            
+            <div class="intro-section">
+                <h2 class="section-title"><i class="fas fa-gamepad"></i> 游戏操作指南</h2>
+                <p class="intro-text">
+                    在游戏中，您将扮演一位唐代乐妓，学习并演奏经典民歌《茉莉花》。请根据屏幕提示，在琵琶区域进行相应的滑动手势来完成琵琶技巧：
+                </p>
+                
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <div class="control-icon"><i class="fas fa-arrow-left"></i></div>
+                        <div class="control-action">向左滑动</div>
+                        <div class="control-desc">弹 - 食指向外弹弦</div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-icon"><i class="fas fa-arrow-right"></i></div>
+                        <div class="control-action">向右滑动</div>
+                        <div class="control-desc">挑 - 食指向内挑弦</div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-icon"><i class="fas fa-arrow-down"></i></div>
+                        <div class="control-action">向下滑动</div>
+                        <div class="control-desc">轮 - 五指快速轮弹</div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-icon"><i class="fas fa-arrow-up"></i></div>
+                        <div class="control-action">向上滑动</div>
+                        <div class="control-desc">勾 - 拇指向内勾弦</div>
+                    </div>
+                </div>
+                
+                <p class="intro-text" style="margin-top: 15px; font-size: 14px;">
+                    <i class="fas fa-lightbulb"></i> <strong>提示：</strong>每个动作需要在5秒内完成，动作正确即可得分。先完成教学关卡，再演奏完整《茉莉花》曲目。
+                </p>
+            </div>
+            
+            <div class="intro-footer">
+                <button id="startGameBtn" class="start-game-btn">
+                    <i class="fas fa-play-circle"></i> 开始游戏之旅
+                </button>
+                <button id="skipIntroBtn" class="skip-btn">
+                    跳过介绍，直接开始
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 原有游戏容器 -->
+    <div class="game-container">
+        <!-- 主界面 -->
+        <div id="mainScreen" class="screen main-screen">
+            <div class="top-bar">
+                <div class="score">得分: 0</div>
+                <div class="timer">5</div>
+            </div>
+            
+            <div class="music-title"></div>
+            
+            <div class="action-display">
+                <div class="action-name"></div>
+            </div>
+            
+            <div class="melody-indicator"></div>
+            
+            <div class="pipa-area">
+                <div class="pipa">
+                    <div class="pipa-body">
+                        <!-- 琴弦 -->
+                        <div class="string" style="left: 15%"></div>
+                        <div class="string" style="left: 35%"></div>
+                        <div class="string" style="left: 55%"></div>
+                        <div class="string" style="left: 75%"></div>
+                        <!-- 品 -->
+                        <div class="fret" style="top: 30%"></div>
+                        <div class="fret" style="top: 50%"></div>
+                        <div class="fret" style="top: 70%"></div>
+                    </div>
+                </div>
+                
+                <div class="touch-hint">请在琵琶区域滑动手指完成琵琶技巧</div>
+                <div class="action-hint">
+                    向左滑=弹 | 向右滑=挑 | 向下滑=轮 | 向上滑=勾
+                </div>
+            </div>
+            
+            <div class="btn-container">
+                <button id="startBtn" class="game-btn start-btn">
+                    <i class="fas fa-music"></i> 开始演奏
+                </button>
+            </div>
+        </div>
+        
+        <!-- 失败界面 -->
+        <div id="failScreen" class="screen fail-screen">
+            <h1 class="screen-title">演奏中断</h1>
+            <div class="score-display final-score">得分: 0</div>
+            <p class="screen-content">未完成《茉莉花》演奏</p>
+            
+            <div class="btn-container">
+                <button class="game-btn restart-btn">
+                    <i class="fas fa-redo"></i> 重新演奏
+                </button>
+                <button class="game-btn back-btn" id="backFromFailBtn">
+                    <i class="fas fa-home"></i> 返回主界面
+                </button>
+            </div>
+        </div>
+        
+        <!-- 知识界面 -->
+        <div id="knowledgeScreen" class="screen knowledge-screen">
+            <h1 class="screen-title">《茉莉花》介绍</h1>
+            <p class="screen-content">
+                中国传统民歌《茉莉花》旋律优美，琵琶版运用了弹、挑、轮、勾等技巧。
+            </p>
+            <div class="btn-container">
+                <button class="game-btn continue-btn">
+                    <i class="fas fa-arrow-right"></i> 继续
+                </button>
+            </div>
+        </div>
+        
+        <!-- 结束界面 -->
+        <div id="endScreen" class="screen end-screen">
+            <h1 class="screen-title">演奏成功!</h1>
+            <div class="score-display">最终得分: <span class="final-score-end">0</span></div>
+            <p class="screen-content">恭喜完成《茉莉花》前半段演奏！</p>
+            
+            <div class="btn-container">
+                <button class="game-btn restart-btn">
+                    <i class="fas fa-redo"></i> 重新演奏
+                </button>
+                <button class="game-btn test-btn">
+                    <i class="fas fa-question-circle"></i> 开始测验
+                </button>
+                <button class="game-btn back-btn" id="backFromEndBtn">
+                    <i class="fas fa-home"></i> 返回主界面
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 新增：弹窗控制
+        const introModal = document.getElementById('introModal');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const skipIntroBtn = document.getElementById('skipIntroBtn');
+        
+        // 显示弹窗（页面加载时自动显示）
+        window.addEventListener('load', () => {
+            introModal.classList.remove('hidden');
+        });
+        
+        // 开始游戏按钮点击事件
+        startGameBtn.addEventListener('click', () => {
+            introModal.classList.add('hidden');
+            showScreen('main');
+        });
+        
+        // 跳过介绍按钮点击事件
+        skipIntroBtn.addEventListener('click', () => {
+            introModal.classList.add('hidden');
+            showScreen('main');
+        });
+        
+        // 游戏状态
+        const gameState = {
+            score: 0,
+            targetScore: 60,
+            currentAction: "",
+            isTutorial: true,
+            tutorialStep: 0,
+            gameActive: false,
+            timer: 5,
+            timerInterval: null,
+            currentMelodyIndex: 0,
+            currentActionIndex: 0
+        };
+        
+        // 《茉莉花》乐句 - 更新为琵琶专业术语
+        const jasmineMelody = [
+            { melody: "引子", actions: ["勾", "弹"] },
+            { melody: "第一句", actions: ["弹", "挑", "勾"] },
+            { melody: "第二句", actions: ["弹", "弹", "挑"] },
+            { melody: "第三句", actions: ["勾", "弹", "挑"] },
+            { melody: "第四句", actions: ["轮", "弹", "弹", "勾"] }
+        ];
+        
+        // 琵琶技巧 - 更新为四种基本技巧
+        const techniques = ["弹", "挑", "轮", "勾"];
+        
+        // DOM元素
+        const screens = {
+            main: document.getElementById("mainScreen"),
+            fail: document.getElementById("failScreen"),
+            knowledge: document.getElementById("knowledgeScreen"),
+            end: document.getElementById("endScreen")
+        };
+        
+        const elements = {
+            score: document.querySelector('.score'),
+            timer: document.querySelector('.timer'),
+            musicTitle: document.querySelector('.music-title'),
+            actionName: document.querySelector('.action-name'),
+            melodyIndicator: document.querySelector('.melody-indicator'),
+            finalScore: document.querySelector('.final-score'),
+            finalScoreEnd: document.querySelector('.final-score-end')
+        };
+        
+        // === 新增：返回主页面的函数 ===
+        function goBackToMain() {
+            // 检查是否在 iframe 中运行
+            if (window.parent && window.parent.closeGame) {
+                // 调用父页面的关闭函数
+                window.parent.closeGame();
+            } else {
+                // 如果没有父页面函数，回退到原来的跳转方式
+                window.location.href = "index.html";
+            }
+        }
+        
+        // 显示指定界面
+        function showScreen(screen) {
+            Object.values(screens).forEach(s => s.style.display = 'none');
+            screens[screen].style.display = 'flex';
+        }
+        
+        // 更新分数
+        function updateScore() {
+            elements.score.textContent = `得分: ${gameState.score}`;
+        }
+        
+        // 开始游戏
+        document.getElementById('startBtn').addEventListener('click', () => {
+            gameState.score = 0;
+            gameState.isTutorial = true;
+            gameState.tutorialStep = 0;
+            gameState.gameActive = true;
+            
+            document.getElementById('startBtn').style.display = 'none';
+            startTutorial();
+        });
+        
+        // 开始教程
+        function startTutorial() {
+            elements.actionName.textContent = "琵琶技巧教学";
+            elements.melodyIndicator.textContent = "学习四种基本技巧";
+            
+            setTimeout(() => runTutorialStep(), 1000);
+        }
+        
+        // 教程步骤
+        function runTutorialStep() {
+            if (gameState.tutorialStep >= techniques.length) {
+                gameState.isTutorial = false;
+                startJasmineGame();
+                return;
+            }
+            
+            gameState.currentAction = techniques[gameState.tutorialStep];
+            elements.actionName.textContent = gameState.currentAction;
+            elements.melodyIndicator.textContent = `技巧 ${gameState.tutorialStep + 1}/${techniques.length}`;
+            
+            gameState.tutorialStep++;
+        }
+        
+        // 开始《茉莉花》游戏
+        function startJasmineGame() {
+            gameState.currentMelodyIndex = 0;
+            gameState.currentActionIndex = 0;
+            
+            elements.musicTitle.textContent = "《茉莉花》演奏";
+            elements.musicTitle.style.display = 'block';
+            
+            elements.actionName.textContent = "准备开始...";
+            elements.melodyIndicator.textContent = "准备演奏";
+            
+            gameState.timer = 5;
+            elements.timer.textContent = gameState.timer;
+            elements.timer.style.display = 'block';
+            
+            setTimeout(() => nextMelody(), 1500);
+        }
+        
+        // 下一个乐句
+        function nextMelody() {
+            if (!gameState.gameActive) return;
+            
+            if (gameState.currentMelodyIndex >= jasmineMelody.length) {
+                checkGameResult();
+                return;
+            }
+            
+            const melody = jasmineMelody[gameState.currentMelodyIndex];
+            elements.melodyIndicator.textContent = `${melody.melody} (${gameState.currentMelodyIndex + 1}/${jasmineMelody.length})`;
+            gameState.currentActionIndex = 0;
+            
+            nextAction();
+        }
+        
+        // 下一个动作
+        function nextAction() {
+            const melody = jasmineMelody[gameState.currentMelodyIndex];
+            
+            if (gameState.currentActionIndex >= melody.actions.length) {
+                gameState.currentMelodyIndex++;
+                setTimeout(() => nextMelody(), 800);
+                return;
+            }
+            
+            gameState.currentAction = melody.actions[gameState.currentActionIndex];
+            elements.actionName.textContent = gameState.currentAction;
+            
+            // 启动计时器
+            clearInterval(gameState.timerInterval);
+            gameState.timer = 5;
+            elements.timer.textContent = gameState.timer;
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                elements.timer.textContent = gameState.timer;
+                
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    endGame();
+                }
+            }, 1000);
+            
+            gameState.currentActionIndex++;
+        }
+        
+        // 处理触摸 - 更新为琵琶专业动作识别
+        const pipaArea = document.querySelector('.pipa-area');
+        let touchStart = { x: 0, y: 0 };
+        
+        pipaArea.addEventListener('touchstart', (e) => {
+            if (!gameState.gameActive) return;
+            e.preventDefault();
+            touchStart.x = e.touches[0].clientX;
+            touchStart.y = e.touches[0].clientY;
+        });
+        
+        pipaArea.addEventListener('touchend', (e) => {
+            if (!gameState.gameActive) return;
+            e.preventDefault();
+            
+            const touchEnd = {
+                x: e.changedTouches[0].clientX,
+                y: e.changedTouches[0].clientY
+            };
+            
+            const diffX = touchEnd.x - touchStart.x;
+            const diffY = touchEnd.y - touchStart.y;
+            const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+            
+            let detectedAction = "";
+            
+            // 根据滑动方向判断琵琶技巧
+            if (distance < 30) {
+                // 短距离滑动/轻触，识别为点击
+                detectedAction = distance < 10 ? "弹" : "挑";
+            } else {
+                // 长距离滑动，根据方向识别技巧
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    // 水平滑动
+                    detectedAction = diffX > 0 ? "挑" : "弹";  // 向右=挑，向左=弹
+                } else {
+                    // 垂直滑动
+                    detectedAction = diffY > 0 ? "轮" : "勾";  // 向下=轮，向上=勾
+                }
+            }
+            
+            if (detectedAction === gameState.currentAction) {
+                if (gameState.isTutorial) {
+                    runTutorialStep();
+                } else {
+                    gameState.score += 10;
+                    updateScore();
+                    clearInterval(gameState.timerInterval);
+                    showFeedback("正确！+10分", "#2e8b57");
+                    setTimeout(() => nextAction(), 600);
+                }
+            } else if (detectedAction) {
+                showFeedback("错误！", "#e74c3c");
+            }
+        });
+        
+        // 显示反馈
+        function showFeedback(message, color = "#2e8b57") {
+            const feedback = document.createElement('div');
+            feedback.textContent = message;
+            feedback.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: ${color};
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 20px;
+                font-weight: bold;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            
+            document.querySelector('.game-container').appendChild(feedback);
+            setTimeout(() => feedback.remove(), 800);
+        }
+        
+        // 检查游戏结果
+        function checkGameResult() {
+            if (gameState.score >= gameState.targetScore) {
+                showScreen('knowledge');
+            } else {
+                elements.finalScore.textContent = `得分: ${gameState.score}`;
+                showScreen('fail');
+            }
+        }
+        
+        // 游戏结束
+        function endGame() {
+            gameState.gameActive = false;
+            elements.finalScore.textContent = `得分: ${gameState.score}`;
+            showScreen('fail');
+        }
+        
+        // 重新开始
+        document.querySelectorAll('.restart-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                gameState.gameActive = false;
+                clearInterval(gameState.timerInterval);
+                document.getElementById('startBtn').style.display = 'block';
+                showScreen('main');
+            });
+        });
+        
+        // 继续到结束
+        document.querySelector('.continue-btn').addEventListener('click', () => {
+            elements.finalScoreEnd.textContent = gameState.score;
+            showScreen('end');
+        });
+        
+        // 测试按钮
+        document.querySelector('.test-btn').addEventListener('click', () => {
+            window.location.href = "question3.html";
+            // window.location.href = "test.html";
+        });
+        
+        // === 修改：返回主界面按钮功能（失败界面）===
+        document.getElementById('backFromFailBtn').addEventListener('click', () => {
+            goBackToMain();
+        });
+        
+        // === 修改：返回主界面按钮功能（结束界面）===
+        document.getElementById('backFromEndBtn').addEventListener('click', () => {
+            goBackToMain();
+        });
+        
+        // 初始化
+        // 注意：现在不在这里显示主界面，而是先显示弹窗
+    </script>
+</body>
+</html>
